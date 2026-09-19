@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.db import transaction
 from django.utils import timezone
+from .events import order_created_event, order_status_event, publish_event
 from .models import Order, OrderItem, OrderStatusLog
 from menu.models import MenuItem
 
@@ -51,6 +52,7 @@ def place_order(user, counter, items, idempotency_key):
     )
 
     total = Decimal("0.00")
+    event_items = []
 
     for item in items:
         menu_item = MenuItem.objects.select_for_update().get(id=item["menu_item_id"])
@@ -79,12 +81,20 @@ def place_order(user, counter, items, idempotency_key):
             unit_price_at_order=menu_item.price,
         )
         total += menu_item.price * quantity
+        event_items.append(
+            {"menu_item_id": menu_item.id, "name": menu_item.name, "quantity": quantity}
+        )
 
     order.total_amount = total
     order.order_number = f"ORD-{timezone.now().year}-{order.id:04d}"
     order.save()
 
     OrderStatusLog.objects.create(order=order, status="PLACED", changed_by=user)
+
+    # Publish only after the database commit succeeds. If this transaction rolls
+    # back (e.g. InsufficientStockError), the callback is discarded and nothing is sent.
+    event = order_created_event(order, event_items)
+    transaction.on_commit(lambda: publish_event(event))
 
     return order
 
@@ -97,6 +107,8 @@ def update_order_status(order_id, new_status, changed_by):
     if new_status not in allowed:
         raise InvalidTransitionError(f"Cannot move from {order.status} to {new_status}.")
 
+    previous_status = order.status
+
     if new_status == "CANCELLED":
         for oi in order.items.select_related("menu_item"):
             mi = MenuItem.objects.select_for_update().get(id=oi.menu_item_id)
@@ -107,6 +119,10 @@ def update_order_status(order_id, new_status, changed_by):
     order.status = new_status
     order.save()
     OrderStatusLog.objects.create(order=order, status=new_status, changed_by=changed_by)
+
+    event = order_status_event(order, previous_status)
+    transaction.on_commit(lambda: publish_event(event))
+
     return order
 
 
