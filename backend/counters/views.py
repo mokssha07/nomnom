@@ -1,3 +1,8 @@
-from django.shortcuts import render
+from rest_framework import generics
+from .models import Counter
+from .serializers import CounterSerializer
 
-# Create your views here.
+
+class CounterListView(generics.ListAPIView):
+    queryset = Counter.objects.all()
+    serializer_class = CounterSerializer
