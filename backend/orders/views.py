@@ -46,6 +46,10 @@ class OrderDetailView(APIView):
 
     def get(self, request, pk):
         order = get_object_or_404(Order, id=pk)
+        is_staff = request.user.role in ("staff", "manager")
+        if not is_staff and order.student_id != request.user.id:
+            # 404 rather than 403, so students can't probe which order IDs exist
+            return Response({"error": "not_found", "detail": "Order not found."}, status=404)
         return Response(OrderSerializer(order).data)
 
     def delete(self, request, pk):
