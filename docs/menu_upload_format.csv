@@ -1,0 +1,17 @@
+name,description,price,category,counter,stock_quantity,low_stock_threshold,is_available,image
+Masala Dosa,"Crisp rice crêpe, potato masala, coconut chutney",60.00,South Indian,Main Kitchen,25,5,true,1-masala-dosa.webp
+Idli Sambar,Two steamed idlis in hot sambar,40.00,South Indian,Main Kitchen,30,5,true,2-idli-sambar.webp
+Medu Vada,"Two lentil doughnuts, coconut chutney",35.00,South Indian,Main Kitchen,20,5,true,3-medu-vada.webp
+Poha,"Flattened rice, peanuts, curry leaves",30.00,South Indian,Main Kitchen,0,5,false,4-poha.webp
+Veg Thali,"Dal, sabzi, rice, four rotis, salad, pickle",90.00,Meals,Main Kitchen,20,5,true,10-veg-thali.webp
+Rajma Chawal,Kidney bean curry over steamed rice,70.00,Meals,Main Kitchen,18,5,true,11-rajma-chawal.webp
+Chole Bhature,"Spiced chickpeas, two fried bhature",80.00,Meals,Main Kitchen,15,5,true,12-chole-bhature.webp
+Paneer Butter Masala,With two butter rotis,110.00,Meals,Main Kitchen,12,5,true,13-paneer-butter-masala.webp
+Veg Sandwich,"Grilled, mint chutney, three layers",45.00,Snacks,Main Kitchen,35,5,true,20-veg-sandwich.webp
+Samosa,"Two, with tamarind and mint chutney",25.00,Snacks,Main Kitchen,40,5,true,21-samosa.webp
+Pav Bhaji,"Buttered pav, mashed vegetable bhaji",65.00,Snacks,Main Kitchen,20,5,true,22-pav-bhaji.webp
+Maggi,"Masala, with extra vegetables",40.00,Snacks,Main Kitchen,30,5,true,23-maggi.webp
+Masala Chai,Ginger and cardamom,15.00,Drinks,Main Kitchen,60,5,true,30-masala-chai.webp
+Filter Coffee,"Strong, in a steel tumbler",20.00,Drinks,Main Kitchen,50,5,true,31-filter-coffee.webp
+Fresh Lime Soda,"Sweet, salted, or mixed",30.00,Drinks,Main Kitchen,40,5,true,32-fresh-lime-soda.webp
+Cold Coffee,"Blended, with ice cream",50.00,Drinks,Main Kitchen,30,5,true,33-cold-coffee.webp

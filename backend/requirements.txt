@@ -19,7 +19,10 @@ msgpack==1.2.2
 packaging==26.3
 pillow==12.3.0
 psycopg2-binary==2.9.13
+pyasynchat==1.0.5
+pyasyncore==1.0.5
 pycparser==3.0
+pyftpdlib==2.2.0
 pyOpenSSL==26.4.0
 python-dotenv==1.2.3
 service-identity==26.1.0
