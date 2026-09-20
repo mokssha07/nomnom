@@ -45,7 +45,7 @@ def import_menu_csv(file_path, image_folder=None):
     result = ImportResult()
     seen_pairs = set()
 
-    with open(file_path, newline="", encoding="utf-8") as f:
+    with open(file_path, newline="", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
 
         missing_columns = validate_header(reader.fieldnames or [])
@@ -122,6 +122,16 @@ def _save_row(cleaned, row_number, result, image_folder=None):
 
     _attach_image(item, cleaned["image_filename"], row_number, result, image_folder)
     item.save()
+
+    # If a restock via CSV brings stock back above the threshold, clear any
+    # previously-set alert flag so a future dip below threshold can alert again.
+    # Without this, an item that once dipped low would never alert a second time,
+    # even after being restocked and dipping low again later.
+    if (item.stock_quantity is not None
+            and item.stock_quantity > item.low_stock_threshold
+            and item.low_stock_alert_sent_at is not None):
+        item.low_stock_alert_sent_at = None
+        item.save(update_fields=["low_stock_alert_sent_at"])
 
     if created:
         result.created.append(item.name)

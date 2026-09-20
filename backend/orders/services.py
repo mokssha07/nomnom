@@ -4,6 +4,8 @@ from django.utils import timezone
 from .events import order_created_event, order_status_event, publish_event
 from .models import Order, OrderItem, OrderStatusLog
 from menu.models import MenuItem
+from django.db import transaction as db_transaction
+from notifications.emails import send_order_confirmation_async, send_low_stock_alert_async
 
 
 class InsufficientStockError(Exception):
@@ -55,12 +57,12 @@ def place_order(user, counter, items, idempotency_key):
     event_items = []
 
     for item in items:
-        menu_item = MenuItem.objects.select_for_update().get(id=item["menu_item_id"])
-
-        if not menu_item.is_orderable():
+        try:
+            menu_item = MenuItem.objects.select_for_update().get(id=item["menu_item_id"])
+        except MenuItem.DoesNotExist:
             raise InsufficientStockError(
-                menu_item.id, menu_item.name,
-                f"'{menu_item.name}' is not available right now."
+                item["menu_item_id"], None,
+                f"Menu item with id {item['menu_item_id']} does not exist."
             )
 
         quantity = item["quantity"]
@@ -72,6 +74,12 @@ def place_order(user, counter, items, idempotency_key):
                     f"Only {menu_item.stock_quantity} unit(s) of '{menu_item.name}' left."
                 )
             menu_item.stock_quantity -= quantity
+
+            if (menu_item.stock_quantity <= menu_item.low_stock_threshold
+                    and menu_item.low_stock_alert_sent_at is None):
+                menu_item.low_stock_alert_sent_at = timezone.now()
+                transaction.on_commit(lambda mi=menu_item: send_low_stock_alert_async(mi))
+
             menu_item.save()
 
         OrderItem.objects.create(
@@ -95,6 +103,8 @@ def place_order(user, counter, items, idempotency_key):
     # back (e.g. InsufficientStockError), the callback is discarded and nothing is sent.
     event = order_created_event(order, event_items)
     transaction.on_commit(lambda: publish_event(event))
+
+    transaction.on_commit(lambda: send_order_confirmation_async(order))
 
     return order
 

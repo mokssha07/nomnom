@@ -1,0 +1,5 @@
+order_number,order_time,counter,student,status,item,quantity,unit_price,line_total,order_total
+ORD-2026-0001,2026-09-19 11:28:04,Main Kitchen,teststudent,PLACED,Veg Thali,2,70.00,140.00,140.00
+ORD-2026-0002,2026-09-19 12:13:31,Main Kitchen,admin,ACCEPTED,Veg Thali,1,70.00,70.00,70.00
+ORD-2026-0003,2026-09-19 13:54:06,Main Kitchen,test_student,COMPLETED,Veg Thali,1,70.00,70.00,70.00
+ORD-2026-0004,2026-09-19 13:56:55,Main Kitchen,test_student,PLACED,Veg Thali,1,70.00,70.00,70.00
