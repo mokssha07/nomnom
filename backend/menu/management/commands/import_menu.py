@@ -1,21 +1,44 @@
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import close_old_connections
 
 from menu.importer import import_menu_csv
 
 
 class Command(BaseCommand):
-    help = "Imports every .csv in the menu upload folder, then moves it to processed/."
+    help = (
+        "Imports every .csv in the menu upload folder, then moves it to processed/. "
+        "Use --watch to keep running and import new files automatically."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--folder",
             default=None,
             help="Folder to scan (default: <backend>/ftp_data/menu)",
+        )
+        parser.add_argument(
+            "--watch",
+            action="store_true",
+            help="Keep running and import new CSV files as they appear.",
+        )
+        parser.add_argument(
+            "--interval",
+            type=float,
+            default=5.0,
+            help="Seconds between folder checks in watch mode (default 5).",
+        )
+        parser.add_argument(
+            "--settle",
+            type=float,
+            default=3.0,
+            help="In watch mode, ignore CSVs modified less than this many seconds "
+            "ago, so half-uploaded files are never read (default 3).",
         )
 
     def handle(self, *args, **options):
@@ -24,15 +47,38 @@ class Command(BaseCommand):
         else:
             folder = Path(settings.BASE_DIR) / "ftp_data" / "menu"
 
-        processed = folder / "processed"
-        processed.mkdir(parents=True, exist_ok=True)
+        (folder / "processed").mkdir(parents=True, exist_ok=True)
 
-        csv_files = sorted(folder.glob("*.csv"))
-        if not csv_files:
-            self.stdout.write("No CSV files to import.")
+        if not options["watch"]:
+            count = self._import_folder(folder, settle=0)
+            if count == 0:
+                self.stdout.write("No CSV files to import.")
             return
 
-        for csv_path in csv_files:
+        self.stdout.write(
+            f"Watching {folder} every {options['interval']}s. Press Ctrl+C to stop."
+        )
+        try:
+            while True:
+                close_old_connections()  # avoid stale database connections
+                try:
+                    self._import_folder(folder, settle=options["settle"])
+                except Exception as e:
+                    self.stderr.write(f"Watcher error (will keep running): {e}")
+                time.sleep(options["interval"])
+        except KeyboardInterrupt:
+            self.stdout.write("Stopped.")
+
+    def _import_folder(self, folder, settle):
+        """Imports every settled CSV in folder. Returns how many files were handled."""
+        processed = folder / "processed"
+        handled = 0
+
+        for csv_path in sorted(folder.glob("*.csv")):
+            if settle and time.time() - csv_path.stat().st_mtime < settle:
+                continue  # possibly still being uploaded; check again next round
+
+            handled += 1
             self.stdout.write(f"Importing {csv_path.name} ...")
             stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             report_lines = []
@@ -67,3 +113,5 @@ class Command(BaseCommand):
             Path(str(target) + ".report.txt").write_text(
                 "\n".join(report_lines) + "\n", encoding="utf-8"
             )
+
+        return handled
