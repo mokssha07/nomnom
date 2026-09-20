@@ -1,9 +1,14 @@
 import csv
 from decimal import Decimal
+from pathlib import Path
+
+from django.core.files import File
 from django.db import transaction
 from .csv_rules import validate_header, validate_row
 from .models import Category, MenuItem
 from counters.models import Counter
+
+ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
 
 class ImportResult:
@@ -11,6 +16,8 @@ class ImportResult:
         self.created = []
         self.updated = []
         self.errors = []
+        self.warnings = []
+        self.images_used = []
 
     def summary(self):
         return {
@@ -18,10 +25,11 @@ class ImportResult:
             "updated_count": len(self.updated),
             "error_count": len(self.errors),
             "errors": [str(e) for e in self.errors],
+            "warnings": [str(w) for w in self.warnings],
         }
 
 
-def import_menu_csv(file_path):
+def import_menu_csv(file_path, image_folder=None):
     """
     Reads a menu CSV and creates/updates MenuItems. Each valid row is applied in
     its own transaction, so one bad row later in the file can never undo good
@@ -31,6 +39,8 @@ def import_menu_csv(file_path):
     Unknown counters are rejected, not auto-created, since a wrong counter name
     could silently misroute real orders. Categories ARE auto-created, since
     getting a new category wrong is low-risk compared to a wrong counter.
+    If image_folder is given, each row's image file is looked up there. A missing
+    image is a warning, not an error: the item still imports.
     """
     result = ImportResult()
     seen_pairs = set()
@@ -52,15 +62,41 @@ def import_menu_csv(file_path):
             seen_pairs.add((cleaned["name"].lower(), cleaned["counter"].lower()))
 
             try:
-                _save_row(cleaned, row_number, result)
+                _save_row(cleaned, row_number, result, image_folder)
             except Exception as e:
                 result.errors.append(f"Row {row_number}: unexpected error - {e}")
 
     return result
 
 
+def _attach_image(item, filename, row_number, result, image_folder):
+    """Sets item.image from a file in image_folder. Does not save the item."""
+    if not filename or image_folder is None:
+        return
+
+    safe_name = Path(filename).name
+    if safe_name != filename or Path(filename).suffix.lower() not in ALLOWED_IMAGE_EXTENSIONS:
+        result.warnings.append(
+            f"Row {row_number}: '{filename}' is not a valid image filename "
+            "(use .jpg, .jpeg, .png or .webp, no folders). Image skipped."
+        )
+        return
+
+    path = Path(image_folder) / safe_name
+    if not path.is_file():
+        result.warnings.append(
+            f"Row {row_number}: image '{filename}' was not found in the upload folder. "
+            "Item imported without a new image."
+        )
+        return
+
+    with open(path, "rb") as f:
+        item.image.save(safe_name, File(f), save=False)
+    result.images_used.append(safe_name)
+
+
 @transaction.atomic
-def _save_row(cleaned, row_number, result):
+def _save_row(cleaned, row_number, result, image_folder=None):
     try:
         counter = Counter.objects.get(name__iexact=cleaned["counter"])
     except Counter.DoesNotExist:
@@ -83,6 +119,8 @@ def _save_row(cleaned, row_number, result):
     item.stock_quantity = cleaned["stock_quantity"]
     item.low_stock_threshold = cleaned["low_stock_threshold"]
     item.is_available = cleaned["is_available"]
+
+    _attach_image(item, cleaned["image_filename"], row_number, result, image_folder)
     item.save()
 
     if created:

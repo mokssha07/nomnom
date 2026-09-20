@@ -34,15 +34,20 @@ class Command(BaseCommand):
 
         for csv_path in csv_files:
             self.stdout.write(f"Importing {csv_path.name} ...")
+            stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
             report_lines = []
+            result = None
 
             try:
-                result = import_menu_csv(csv_path)
+                result = import_menu_csv(csv_path, image_folder=folder)
                 summary = result.summary()
-                report_lines.append(f"Created: {summary['created_count']}")
-                report_lines.append(f"Updated: {summary['updated_count']}")
-                report_lines.append(f"Errors:  {summary['error_count']}")
+                report_lines.append(f"Created:  {summary['created_count']}")
+                report_lines.append(f"Updated:  {summary['updated_count']}")
+                report_lines.append(f"Errors:   {summary['error_count']}")
                 report_lines.extend(summary["errors"])
+                if summary["warnings"]:
+                    report_lines.append(f"Warnings: {len(summary['warnings'])}")
+                    report_lines.extend(summary["warnings"])
             except Exception as e:
                 # A file we can't read at all must not crash the whole run.
                 report_lines.append(f"Could not read file: {e}")
@@ -50,7 +55,13 @@ class Command(BaseCommand):
             for line in report_lines:
                 self.stdout.write("  " + line)
 
-            stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            # Images are already copied into media/, so archive the originals.
+            if result:
+                for name in sorted(set(result.images_used)):
+                    src = folder / name
+                    if src.exists():
+                        shutil.move(str(src), str(processed / f"{stamp}-{name}"))
+
             target = processed / f"{stamp}-{csv_path.name}"
             shutil.move(str(csv_path), str(target))
             Path(str(target) + ".report.txt").write_text(
