@@ -1,0 +1,324 @@
+/* The only screen in the app with nothing above it, so it gets the whole
+   window: a partition down the middle, the bowl on the left, the form on the
+   right. Below 60rem there is no room for two columns — the bowl slides
+   behind the card and becomes the wallpaper instead. */
+.signin {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--s4);
+  padding: var(--s6) var(--s4);
+  overflow: hidden;
+}
+
+/* The light the whole scene is lit by, and the reason the glass has anything
+   to refract. Sits behind everything, over on the bowl's side of the seam. */
+.signin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 55% at 26% 46%, rgba(220, 174, 89, 0.2), transparent 70%),
+    radial-gradient(70% 60% at 92% 6%, rgba(23, 80, 60, 0.55), transparent 72%);
+  pointer-events: none;
+}
+
+.signin__pane {
+  position: relative; /* above the art, which is what makes it glass */
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--s4);
+  width: min(100%, 40rem);
+}
+
+/* ── The card ─────────────────────────────────────────────────────────
+   The one frosted surface in the app. Everywhere else `--blur` is 0 because
+   the finish is matte, and a page full of frost is the look this project set
+   out to avoid — but here the glass has something to hold: the bowl behind
+   it. One exception, in one place, doing one job.
+
+   The tint is plain white rather than the app's forest, so it reads as a
+   pane of glass over the scene instead of another green panel sitting on it. */
+.signin__card {
+  width: 100%;
+  border-radius: var(--r-panel);
+  padding: var(--s6) var(--s5);
+  display: grid;
+  gap: var(--s4);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(255, 255, 255, 0.1) 44%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(26px) saturate(1.25);
+  -webkit-backdrop-filter: blur(26px) saturate(1.25);
+  box-shadow:
+    /* the lit top lip, inside the glass */
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    /* the thickness of the pane, along the bottom */ inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    0 24px 60px rgba(4, 26, 18, 0.45);
+}
+
+.signin__title {
+  font-size: var(--t-title);
+  letter-spacing: var(--tr-title);
+  line-height: var(--lh-tight);
+  font-weight: var(--w-semi);
+  margin: 0;
+}
+
+.signin__sub {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  margin-top: calc(var(--s3) * -1);
+}
+
+/* ── Fields ───────────────────────────────────────────────────────────
+   Wells cut into the glass: lighter than the pane, not darker, because a
+   hole in a white pane still shows white at its edges. */
+.field {
+  display: grid;
+  gap: var(--s2);
+}
+
+.field__label {
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  color: var(--ink-soft);
+}
+
+.field input {
+  min-height: var(--tap);
+  padding: 0 var(--s4);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-control);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 2px rgba(4, 26, 18, 0.28);
+  transition: border-color 0.15s var(--ease);
+}
+
+.field input:hover,
+.field input:focus-visible {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* The browser's own invalid styling fires while you are still typing the
+   third character, so this only marks a field the user has already left. */
+.field input:user-invalid {
+  border-color: var(--danger);
+}
+
+/* The server's verdict, not the browser's: this one survives a valid-looking
+   value the backend still rejected, such as a roll number already taken. */
+.field--bad input,
+.field--bad input:hover {
+  border-color: var(--danger);
+  background: rgba(224, 112, 90, 0.12);
+}
+
+.field__error {
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  color: var(--danger);
+}
+
+.signin__error {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-control);
+  background: rgba(224, 112, 90, 0.18);
+  color: var(--signal-late);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.signin__go {
+  min-height: var(--tap);
+  border-radius: var(--r-pill);
+  background: var(--pill);
+  color: var(--pill-ink);
+  font-size: var(--t-body);
+  letter-spacing: var(--tr-body);
+  font-weight: var(--w-semi);
+  box-shadow: var(--lift);
+  transition: transform 0.12s var(--ease);
+}
+
+.signin__go:active {
+  transform: scale(0.99);
+}
+
+.signin__go:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Same reason as the orders nav: the link is one small word at the bottom of
+   a phone screen, so it carries a 44px box under it. */
+.signin__swap a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: var(--s2);
+}
+
+.signin__swap {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  text-align: center;
+}
+
+/* ── The bowl ─────────────────────────────────────────────────────────
+   On a phone there is one column, so it goes behind the card, bled off the
+   right edge and dimmed enough to read through. */
+.signin__art {
+  position: absolute;
+  z-index: 0;
+  inset: auto -26% -12% auto;
+  width: 28rem;
+  max-width: 130%;
+  margin: 0;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* The bowl's own shadow on the floor, drawn separately from the bowl so it
+   can stay put while the bowl lifts off it. This is what makes it read as an
+   object above the page rather than a picture printed on it. */
+.signin__art::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: 8%;
+  right: 8%;
+  bottom: 2%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(2, 14, 10, 0.75), transparent 70%);
+  filter: blur(18px);
+}
+
+.signin__bowl {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Four shadows, near to far, the same contact/mid/wide stack the panels
+     use — drop-shadow rather than box-shadow so they follow the rim of the
+     bowl instead of a rectangle around it. The near one pins it down, the far
+     one is what makes it float. */
+  filter: drop-shadow(0 3px 4px rgba(2, 14, 10, 0.6))
+    drop-shadow(0 18px 26px rgba(2, 14, 10, 0.55)) drop-shadow(0 46px 60px rgba(2, 14, 10, 0.45))
+    drop-shadow(0 80px 110px rgba(2, 14, 10, 0.4));
+}
+
+/* ── The partition ────────────────────────────────────────────────────
+   Wide enough for two columns: the form on its half, the bowl on its own.
+   The line down the middle is imaginary — nothing is drawn there, the gap
+   between the two halves is what you read. */
+@media (min-width: 60rem) {
+  .signin {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: var(--s7);
+    /* Tight against the frame on purpose: the card and the bowl are the two
+       halves of the page, and a wide margin round them would shrink both back
+       into a box floating in the middle. */
+    padding: var(--s6) clamp(var(--s5), 3vw, var(--s7));
+  }
+
+  /* The bowl takes the left half, the form the right. Source order is the
+     other way round — the form is what the page is for, so it comes first in
+     the markup and for anyone reading it with the CSS off. */
+  .signin__art {
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    inset: auto;
+    width: min(100%, 40rem);
+    justify-self: center;
+    opacity: 1;
+  }
+
+  .signin__pane {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: stretch;
+    width: auto;
+    max-width: 34rem;
+  }
+
+  /* Room to breathe at this size: the same card, scaled up, not a different
+     one — padding and the title grow together so the proportions hold. */
+  .signin__card {
+    padding: var(--s7) var(--s6);
+    gap: var(--s5);
+  }
+
+  .signin__title {
+    font-size: var(--t-display);
+    letter-spacing: var(--tr-display);
+  }
+
+  .signin__sub {
+    font-size: var(--t-body);
+    letter-spacing: var(--tr-body);
+  }
+
+  .signin__bowl {
+    /* Tipped a few degrees so the bowl sits in the room rather than square to
+       the screen. The float animation re-declares this, so it lives here as
+       the resting pose only. */
+    animation: bowl-float 9s var(--ease) infinite;
+  }
+}
+
+/* A slow drift, not a bounce: the depth reads as real when the bowl moves a
+   little and the floor shadow underneath it does not. */
+@keyframes bowl-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg) scale(1);
+  }
+  50% {
+    transform: translateY(-16px) rotate(-4.5deg) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signin__bowl {
+    animation: none;
+    transform: rotate(-6deg); /* keeps the pose, drops the drift */
+  }
+}
+
+/* ── The line under the bowl ──────────────────────────────────────────
+   Hidden on a phone, where the bowl is dimmed wallpaper behind the form and
+   anything printed over it would be unreadable rather than quiet. */
+.signin__quote {
+  display: none;
+}
+
+@media (min-width: 60rem) {
+  .signin__quote {
+    display: grid;
+    gap: var(--s2);
+    margin-top: var(--s5);
+    padding-inline: var(--s5);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .signin__quote q {
+    color: var(--ink);
+    font-size: var(--t-lead);
+    letter-spacing: var(--tr-lead);
+    line-height: var(--lh-tight);
+    font-weight: var(--w-medium);
+  }
+}

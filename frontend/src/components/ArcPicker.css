@@ -1,0 +1,126 @@
+.arc {
+  /* One number for the photo size. The rail's side padding is derived from it,
+     and if the two ever disagree the first dish can no longer reach the middle
+     and the whole rail refuses to scroll back to the start. */
+  --pic: 132px;
+
+  display: grid;
+  gap: var(--s4);
+  justify-items: center;
+}
+
+.arc__title {
+  justify-self: start;
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-medium);
+  color: var(--ink-soft);
+}
+
+/* Full-bleed out of the 34rem column: the rail is the one thing on this page
+   that should run edge to edge, so the photos leaving the screen read as more
+   menu rather than as a cut-off card. */
+.arc__rail {
+  /* Positioned so the scroll handler's offsetLeft readings are measured from
+     the rail rather than from whatever ancestor happens to be positioned. */
+  position: relative;
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  display: flex;
+  gap: var(--s4);
+  /* The first and last photo still have to be able to reach the middle. */
+  padding-inline: calc(50vw - var(--pic) / 2);
+  padding-block: var(--s4) calc(var(--s2) + 76px); /* room for the arc's drop */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.arc__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.arc__slot {
+  flex: 0 0 var(--pic);
+  padding: 0; /* a button's default 1px 6px would widen every slot by 12px */
+  scroll-snap-align: center;
+  border-radius: var(--r-card);
+  /* No transition on purpose. The arc is rewritten every animation frame, and
+     a transition on top of that makes each photo chase a value that has already
+     moved on — which is exactly what the rail used to feel like. The smoothing
+     belongs to the scroll position, not to the photo. */
+  will-change: transform;
+}
+
+.arc__photo {
+  display: block;
+  width: var(--pic);
+  height: var(--pic);
+  border-radius: var(--r-card);
+  object-fit: cover;
+  border: 1px solid var(--line);
+  /* Every photo sits on the ground, not just the middle one — without a shadow
+     on the turned ones the row reads as stickers on glass. The inset is the
+     top edge catching the same light the ModeSwitch's thumb does. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 2px 4px rgba(0, 0, 0, 0.34),
+    0 10px 18px -8px rgba(0, 0, 0, 0.5),
+    0 24px 40px -18px rgba(0, 0, 0, 0.64);
+  /* The far half of a rotated photo is never wanted, and drawing it is what
+     produces the faint seam down the middle of a turned card. */
+  backface-visibility: hidden;
+}
+
+/* The dish in the middle stands off the rail rather than just being bigger:
+   a tighter contact shadow, a longer drop, and the brass whisper under it so
+   the pop reads as warm light and not as a darker hole. */
+.arc__slot[aria-current] .arc__photo {
+  border-color: var(--line-lit);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    0 16px 28px -10px rgba(0, 0, 0, 0.58),
+    0 38px 64px -24px rgba(0, 0, 0, 0.72),
+    var(--lift-accent);
+}
+
+.arc__caption {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+  text-align: center;
+}
+
+.arc__name {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-semi);
+}
+
+/* The one bold thing in this block. */
+.arc__price {
+  font-size: var(--t-price);
+  letter-spacing: var(--tr-price);
+  font-weight: var(--w-bold);
+}
+
+.arc__caption .stepper {
+  margin-top: var(--s2);
+}
+
+/* The arc is written as inline styles by the scroll handler, so flattening it
+   takes !important — there is nothing else to outrank. The rail keeps working
+   as a plain scrolling strip. */
+@media (prefers-reduced-motion: reduce) {
+  .arc__slot {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none;
+  }
+
+  .arc__rail {
+    padding-bottom: var(--s2);
+  }
+}

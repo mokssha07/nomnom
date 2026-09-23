@@ -1,0 +1,9 @@
+<!-- A bowl, seen from the side, with the counter line under it. Drawn as two
+     solid shapes because a 16px tab icon has room for a silhouette and nothing
+     else — no outline, no steam, no text. Colours are the app's own: forest
+     ground, cream bowl, brass rim. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <rect width="32" height="32" rx="7" fill="#0a2a20" />
+  <path d="M5 14h22a11 11 0 0 1-22 0z" fill="#f7f1e3" />
+  <rect x="4" y="11.5" width="24" height="2.5" rx="1.25" fill="#d9a441" />
+</svg>

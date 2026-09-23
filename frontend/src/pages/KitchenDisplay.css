@@ -1,0 +1,498 @@
+/* The kitchen board.
+   Flat solids rather than the tinted glass the student pages use — see
+   [data-surface='board'] in tokens.css. A wall screen is read across a room
+   with steam in front of it, so every layer here is opaque and every edge is
+   a hairline. */
+
+.board {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.board__loading {
+  padding: var(--s6);
+  color: var(--ink-soft);
+}
+
+/* ── The rail ──────────────────────────────────────────────────────────
+   Not navigation: this app has one kitchen screen. It holds the mark and
+   the only control on the page that is not a ticket, kept far from the
+   tickets so a stray thumb cannot sign the shift out mid-service. */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s4) 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+
+.rail__mark {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--r-control);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.rail__signout {
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border: 0;
+  border-radius: var(--r-control);
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.rail__signout:hover {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+/* ── The page ──────────────────────────────────────────────────────────
+   Everything scrolls inside the ticket grid, not the page: a board that
+   scrolls as a whole loses its headings the moment anyone touches it. */
+
+.board__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  min-width: 0;
+  padding: var(--s4) var(--s5);
+  overflow: hidden;
+}
+
+.board__bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+
+.board__title {
+  font-size: var(--t-title);
+  letter-spacing: var(--tr-title);
+  line-height: var(--lh-tight);
+  font-weight: var(--w-semi);
+}
+
+.board__sub {
+  margin-top: var(--s1);
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.board__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.board__clock {
+  padding: var(--s2) var(--s3);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-medium);
+}
+
+.board__offline {
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--signal-late);
+  border-radius: var(--r-control);
+  color: var(--signal-late);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+/* ── Tickets ───────────────────────────────────────────────────────── */
+
+.live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  flex: 1;
+  min-height: 0;
+}
+
+.live__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+
+.live__title {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-semi);
+}
+
+.live__body {
+  display: grid;
+  grid-template-columns: 1fr 17rem;
+  gap: var(--s4);
+  flex: 1;
+  min-height: 0;
+}
+
+/* The tabs carry the per-stage counts, so filtering the board and reading
+   the split are the same control. */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s3);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  cursor: pointer;
+  transition: color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+
+.tab:hover {
+  border-color: var(--line-lit);
+  color: var(--ink);
+}
+
+.tab--on,
+.tab--on:hover {
+  background: var(--pill);
+  border-color: var(--pill);
+  color: var(--pill-ink);
+  font-weight: var(--w-medium);
+}
+
+.tab__count {
+  padding: 0 0.4rem;
+  border-radius: var(--r-pill);
+  background: var(--surface-control);
+  font-size: var(--t-micro);
+}
+
+.tab--on .tab__count {
+  background: color-mix(in srgb, var(--pill-ink) 14%, transparent);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  align-content: start;
+  gap: var(--s3);
+  overflow-y: auto;
+  /* A panel, not a bare region. With four tickets on a wide board the grid is
+     mostly empty, and unframed that empty space reads as the layout having
+     broken rather than as a board that is not full. */
+  padding: var(--s3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  /* Lit rather than hairline: this is the one scrollbar on the board, and
+     staff need to see at a glance that there are more tickets below. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-lit) transparent;
+}
+
+.cards::-webkit-scrollbar {
+  width: 10px;
+}
+
+.cards::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cards::-webkit-scrollbar-thumb {
+  background: var(--line-lit);
+  border-radius: var(--r-pill);
+}
+
+.cards::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+.cards__empty {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding: var(--s3) var(--s4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+}
+
+/* Past the threshold the card outlines itself. One border, not a red fill —
+   half a board glowing red stops meaning anything. */
+.card--late {
+  border-color: color-mix(in srgb, var(--signal-late) 60%, var(--line));
+}
+
+.card--pending {
+  opacity: 0.55;
+}
+
+.card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s2);
+}
+
+.card__token {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-semi);
+}
+
+.chip {
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, currentColor 16%, transparent);
+  font-size: var(--t-micro);
+  letter-spacing: 0.04em;
+  font-weight: var(--w-semi);
+}
+
+.chip--placed { color: var(--signal-wait); }
+.chip--preparing { color: var(--signal-work); }
+.chip--ready { color: var(--signal-done); }
+
+.card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.card--late .card__meta {
+  color: var(--signal-late);
+}
+
+.card__items {
+  display: grid;
+  align-content: start;
+  gap: var(--s2);
+  list-style: none;
+  margin: 0;
+  padding: var(--s2) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.card__item {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: var(--s2);
+}
+
+.card__qty {
+  font-weight: var(--w-semi);
+}
+
+.card__qty::after {
+  content: '×';
+  margin-left: 0.1em;
+  color: var(--ink-soft);
+}
+
+/* The one filled control on the board. It is full width because it is tapped
+   with the side of a thumb while the other hand is holding a pan. */
+.card__action {
+  /* Takes the slack so the button lands on the bottom edge of every card in
+     the row, whether the ticket is one dish or four. The slack sits here and
+     not on the item list: stretching the list drags its bottom rule down with
+     it and opens an empty band inside the box the rule is meant to close. */
+  margin-top: auto;
+  min-height: var(--tap);
+  width: 100%;
+  border: 0;
+  border-radius: var(--r-control);
+  background: var(--pill);
+  color: var(--pill-ink);
+  font: inherit;
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  font-weight: var(--w-semi);
+  cursor: pointer;
+  transition: background 0.15s var(--ease);
+}
+
+.card__action:hover {
+  background: var(--accent);
+}
+
+.card__action:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+/* ── Short screens ────────────────────────────────────────────────────
+   A wall screen is tall enough to hold the readings and the tickets at
+   once; a laptop is not. The board still fills exactly one window — the
+   header, the readings and the tabs stay put and the ticket grid takes
+   whatever height is left and scrolls inside it. What gets spent is the
+   chrome, not the tickets. */
+
+@media (max-height: 52rem) {
+  .board__main {
+    gap: var(--s2);
+    padding: var(--s3) var(--s4);
+  }
+
+  .stat {
+    padding: var(--s2) var(--s3);
+  }
+
+  .stat__value {
+    font-size: var(--t-lead);
+    letter-spacing: var(--tr-lead);
+  }
+
+  .stat__icon {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .board__title {
+    font-size: var(--t-lead);
+    letter-spacing: var(--tr-lead);
+  }
+}
+
+/* ── Narrower screens ─────────────────────────────────────────────────
+   A tablet propped by the pass, or the board opened on a laptop.
+
+   The pan list stays beside the tickets and gets narrower. Stacking it on
+   top is what broke this before: as a row of its own it claimed its full
+   content height and left the ticket grid a 238px slot — one row of cards
+   with everything else behind a scrollbar. */
+
+@media (max-width: 78rem) {
+  .live__body {
+    grid-template-columns: 1fr 13rem;
+  }
+
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  }
+}
+
+/* Narrow enough that the pan list starves the tickets whichever way it goes:
+   beside them it leaves cards a single column, stacked above them it took
+   176px and left the grid 130px. So it goes. The tickets are the job, and
+   the tab counts above already say how the board is split.
+
+   The board still fills exactly one window here, same as everywhere else —
+   the ticket grid is the only thing that scrolls at any size. One rule for
+   the whole board beats a size where the page moves and the headings leave. */
+
+@media (max-width: 60rem) {
+  .board {
+    grid-template-columns: 3.5rem 1fr;
+  }
+
+  .board__main {
+    padding: var(--s3);
+  }
+
+  .live__body {
+    grid-template-columns: 1fr;
+  }
+
+  /* ponytail: dropped rather than shrunk — bring it back as a tab if anyone
+     ever runs the board on something this small. */
+  .pans {
+    display: none;
+  }
+}
+
+/* ── Phone ────────────────────────────────────────────────────────────
+   A wall board fills exactly one window and scrolls only its tickets. A
+   phone cannot do that: at 390px the five readings alone are taller than
+   the screen, which left the ticket grid a 25px slot — and because the
+   board clips its own overflow, no way to scroll down to it.
+
+   So below this width the board stops being a fixed screen and becomes an
+   ordinary page. The document scrolls, nothing is clipped, and the rail
+   rides across the top instead of down the side. Losing the side rail also
+   gives the readings back the 56px they needed to sit two abreast.
+
+   ponytail: the phone board is the same markup re-flowed, not a second
+   layout. A purpose-built mobile ticket view is the upgrade if staff ever
+   really work the pass from a phone. */
+
+@media (max-width: 48rem) {
+  .board {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  /* Across the top, and it stays there: sign-out is the one control here
+     that should never need a scroll back up to find. */
+  .rail {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex-direction: row;
+    padding: var(--s2) var(--s3);
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Nothing in here owns a scrollbar any more — the page does. */
+  .board__main,
+  .cards {
+    overflow: visible;
+  }
+
+  .live,
+  .live__body {
+    min-height: auto;
+  }
+
+  /* The panel framing existed to stop a half-empty grid reading as a broken
+     layout. One column of cards cannot look half-empty, so the frame goes
+     and the cards are their own edges. */
+  .cards {
+    padding: 0;
+    background: none;
+    border: 0;
+  }
+}

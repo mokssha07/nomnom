@@ -1,0 +1,202 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   FOREST, BRASS & CREAM — the whole design system in one file.
+
+   Deep emerald ground, warm cream type, brass as the single accent. Nothing
+   else in the app defines a colour; everything reads from here.
+
+   The finish is matte, like a matte-wrap car: flat colour, no specular
+   highlights, no glow behind the page — depth comes from a fine grain over
+   everything and from layered soft shadows, not from shine. The one glossy
+   thing in the app is the brass, which is how you can tell it is metal.
+
+   Scale and ratios are from docs/palette (Forest / Brass / Cream, 60/30/10).
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Raw scales ────────────────────────────────────────────────────── */
+  --forest-950: #041a12;
+  --forest-900: #0a2a20;
+  --forest-800: #133f2f;
+  --forest-700: #17503c;
+  --forest-600: #1f6a50;
+  --forest-500: #2b8565;
+  --forest-400: #52a486;
+  --sage: #a7c6b5;
+
+  --brass-300: #eed08c;
+  --brass-400: #dcae59; /* the accent */
+  --brass-500: #c78e32;
+  --brass-600: #a97726;
+
+  --cream-50: #fdfcf9;
+  --cream-100: #fbf6e8;
+  --cream-200: #f3ecd8;
+  --cream-300: #ebe1c8;
+
+  --ink-green: #10261c; /* type on cream */
+
+  /* ── The matte finish ─────────────────────────────────────────────────
+     One SVG noise tile, inline so the app still fetches nothing. Laid over
+     the page at 30% with mix-blend-mode: overlay, it takes the sheen off the
+     flat colour and makes it read as paint rather than as a screen fill. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* ── Layers ───────────────────────────────────────────────────────────
+     Panels nest, so each level is a little more cream than the one it sits
+     on. Tinted rather than solid so a panel lifts over any part of the
+     ground, and flat rather than frosted — a blurred, saturated pane is a
+     gloss effect, and this room has no gloss in it. */
+  --layer-1: rgba(243, 236, 216, 0.055); /* page-level panels */
+  --layer-2: rgba(243, 236, 216, 0.085); /* cards inside a panel */
+  --layer-3: rgba(243, 236, 216, 0.12); /* controls inside a card */
+  --layer-edge: rgba(235, 225, 200, 0.14); /* the 1px top-lit border */
+  --layer-edge-lit: rgba(235, 225, 200, 0.26); /* hover / focus edge */
+  --blur: 0px; /* matte: nothing frosts */
+
+  /* ── Signal colours ───────────────────────────────────────────────────
+     Kitchen staff read these from three metres away, so each one is far
+     enough from the brass accent to never be confused with it. Every use is
+     paired with its status word — colour is never the only cue. */
+  --signal-wait: #a7c6b5; /* PLACED — not started */
+  --signal-work: #dcae59; /* PREPARING — the accent */
+  --signal-done: #52a486; /* READY — pick it up */
+  --signal-late: #e0705a; /* waiting too long */
+
+  /* ── Semantic roles — components use these, not the raw names above ── */
+  --bg: var(--forest-900); /* the floor; the page gradient is in base.css */
+  --surface: var(--layer-1);
+  --surface-raised: var(--layer-2);
+  --surface-control: var(--layer-3);
+  --surface-solid: var(--forest-700); /* the top of the page gradient */
+  --ink: var(--cream-200);
+  --ink-soft: var(--sage);
+  --line: var(--layer-edge);
+  --line-lit: var(--layer-edge-lit);
+  --accent: var(--brass-400);
+  --accent-ink: var(--ink-green); /* type on brass — brass is a light colour */
+  --focus: #e59a2b;
+  --danger: var(--signal-late);
+
+  /* The primary action is the brightest thing on the page: a cream pill with
+     green-black type, which on this ground reads as paper, not as a screen. */
+  --pill: var(--cream-100);
+  --pill-ink: var(--ink-green);
+
+  /* ── Type — Apple's system, rebuilt ───────────────────────────────────
+     One family everywhere, no display serif. Apple gets its range from three
+     things instead, and we copy all three:
+
+     1. OPTICAL SIZING. San Francisco ships as two cuts — SF Text below 20px
+        with open apertures and loose spacing, SF Display above it with tight
+        spacing and finer joins. Inter v4 does the same job with an `opsz`
+        axis, so `font-optical-sizing: auto` (set in base.css) gives us both
+        cuts from one file. That is why we load the opsz build, not wght.
+
+     2. TRACKING THAT MOVES WITH SIZE. This is the part everyone skips and the
+        single biggest tell. Apple tightens letter-spacing as type grows and
+        LOOSENS it as type shrinks — a 56px headline is nearly -4%, an 11px
+        label is positive. One global letter-spacing on headings is wrong at
+        every size but one, so each step below carries its own value.
+
+     3. RESTRAINT IN WEIGHT. Apple's heaviest UI weight is Semibold, and 590
+        is the actual number SF uses — not 600, and never 800. Bold is for
+        one thing on a screen, usually a number.
+
+     Sizes are Apple's, not a 1.25 modular scale: 11 / 13 / 15 / 17 / 22 /
+     28 / 40 / 56. 17px body is the iOS default and reads noticeably calmer
+     than 16.
+
+     "Variable" is the family name @fontsource-variable registers; the plain
+     name follows so a system copy still works if the bundle ever fails. */
+  --font-ui: 'Inter Variable', Inter, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  --t-micro: 0.6875rem; /* 11 — timestamps, helper text */
+  --t-small: 0.8125rem; /* 13 — descriptions, meta */
+  --t-body: 1.0625rem; /* 17 — default, iOS body */
+  --t-lead: 1.375rem; /* 22 — card titles */
+  --t-price: 1.375rem; /* 22 — prices */
+  --t-title: 1.75rem; /* 28 — page titles */
+  --t-display: 2.5rem; /* 40 — hero */
+  --t-hero: 3.5rem; /* 56 — confirmation token number */
+
+  /* Pair each size with its tracking. Using --t-title without --tr-title is
+     the bug that makes a page look almost right and slightly cheap. */
+  --tr-micro: 0.01em;
+  --tr-small: 0;
+  --tr-body: -0.011em;
+  --tr-lead: -0.019em;
+  --tr-price: -0.019em;
+  --tr-title: -0.023em;
+  --tr-display: -0.03em;
+  --tr-hero: -0.038em;
+
+  /* 1.47 is Apple's body ratio — roomier than the 1.5 everyone defaults to
+     sounds, because 17px body with 25px leading is where it lands. */
+  --lh-body: 1.47;
+  --lh-tight: 1.2; /* card titles */
+  --lh-display: 1.05; /* anything 40px and up */
+
+  --w-regular: 400;
+  --w-medium: 510; /* SF Medium */
+  --w-semi: 590; /* SF Semibold — the heaviest weight in normal use */
+  --w-bold: 700; /* one thing per screen, usually a number */
+
+  /* ── Space — a 4px grid ───────────────────────────────────────────── */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4rem;
+
+  /* ── Shape ────────────────────────────────────────────────────────────
+     Four radii, each with a job — a panel and a chip should not share a
+     corner. */
+  --r-pill: 999px;
+  --r-panel: 28px; /* page-level panels */
+  --r-card: 20px; /* cards inside a panel */
+  --r-control: 14px; /* inputs, small controls */
+
+  /* Three shadows stacked rather than one blur: a tight contact shadow that
+     sits the panel on the page, a mid one, and a wide soft one. That stack
+     is what reads as depth on a matte surface, where there is no highlight
+     to do the job. */
+  --lift:
+    0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 18px -8px rgba(0, 0, 0, 0.3),
+    0 30px 56px -28px rgba(0, 0, 0, 0.35);
+  /* A whisper, not a lamp — a strong amber glow is the cheapest-looking
+     thing this palette can do. */
+  --lift-accent: 0 16px 40px -18px rgba(220, 174, 89, 0.32);
+
+  --page: 34rem; /* student content column */
+  --tap: 44px; /* minimum touch target */
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Overshoots slightly on the way out. Only things that are supposed to
+     read as physical use it — the account menu's blobs, nothing else. */
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* ── Kitchen Display ──────────────────────────────────────────────────
+   The board is the same forest family, but every soft thing is stripped
+   out: no tinted layers, no grain, flat solid tiles, wider type, heavier
+   weights. Tinted panels are a phone-in-hand pleasure and a liability on a
+   wall display read from three metres through steam. Same palette, opposite
+   treatment — which is what makes it read as a different machine. */
+[data-surface='board'] {
+  --bg: var(--forest-950);
+  --surface: var(--forest-900);
+  --surface-raised: var(--forest-800);
+  --surface-control: var(--forest-700);
+  --line: var(--forest-600);
+  --line-lit: var(--forest-500);
+  --ink: var(--cream-50);
+  --ink-soft: var(--sage);
+  --lift: none;
+
+  --r-panel: 16px;
+  --r-card: 12px;
+  --r-control: 8px;
+}

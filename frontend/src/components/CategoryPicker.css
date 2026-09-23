@@ -1,0 +1,156 @@
+/* Two opposite treatments, one light source from above. The trigger is cut
+   into the page and so is darker than it, with its lip catching the light; the
+   open list is lifted off the page and so is lighter, with its top edge lit and
+   a long shadow underneath. That pair is the whole idea — pressed in, or
+   standing proud. Nothing else has to say which one is open. */
+
+.picker {
+  position: relative;
+  width: 13rem;
+  height: var(--tap); /* only the trigger takes up space in the page */
+  z-index: 5; /* the open list floats over the menu below it */
+  font-size: var(--t-body);
+  letter-spacing: var(--tr-body);
+}
+
+/* ── The well ─────────────────────────────────────────────────────────── */
+
+.picker__trigger {
+  width: 100%;
+  height: var(--tap);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding-inline: var(--s5) var(--s4);
+  border-radius: var(--r-pill);
+  /* Darker than the page: a recess sees less of the room than the surface
+     around it. Same construction as the mode switch's well, so the two
+     controls at the top of the menu read as one machine. */
+  background: linear-gradient(rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0.16));
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.09);
+  color: var(--ink);
+  font-weight: var(--w-semi);
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker__value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.picker__chev {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid var(--ink-soft);
+  border-bottom: 2px solid var(--ink-soft);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.3s var(--ease);
+}
+
+.picker--open .picker__chev {
+  transform: translateY(1px) rotate(-135deg);
+  border-color: var(--accent);
+}
+
+/* ── The panel ────────────────────────────────────────────────────────── */
+
+.picker__list {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--tap) + var(--s2));
+  padding: var(--s1);
+  list-style: none;
+  border-radius: var(--r-card);
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    var(--lift);
+  /* Grows out of the trigger rather than appearing beside it. */
+  transform-origin: top center;
+  opacity: 0;
+  scale: 0.97;
+  translate: 0 -8px;
+  pointer-events: none;
+  transition:
+    opacity 0.16s linear,
+    scale 0.28s var(--ease),
+    translate 0.28s var(--ease);
+}
+
+.picker--open .picker__list {
+  opacity: 1;
+  scale: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+.picker__list li {
+  opacity: 0;
+  translate: 0 -6px;
+  /* Closing, the whole panel goes at once — a list that drains row by row on
+     the way out reads as slow, not as considered. */
+  transition:
+    opacity 0.12s linear,
+    translate 0.12s linear;
+}
+
+.picker--open .picker__list li {
+  opacity: 1;
+  translate: 0 0;
+  /* Arriving one after another is what makes the panel feel dealt out rather
+     than pasted on. The overshoot is small: this is a menu, not a toy. */
+  transition:
+    opacity 0.2s linear calc(var(--i) * 32ms + 60ms),
+    translate 0.34s cubic-bezier(0.34, 1.46, 0.52, 1) calc(var(--i) * 32ms + 60ms);
+}
+
+.picker__list button {
+  position: relative;
+  width: 100%;
+  padding: var(--s3) var(--s3) var(--s3) var(--s5);
+  border-radius: var(--r-control);
+  text-align: left;
+  color: var(--ink-soft);
+  transition: background-color 0.16s linear;
+}
+
+.picker__list button:hover {
+  background: var(--surface-control);
+  color: var(--ink);
+}
+
+.picker__list button[aria-current] {
+  color: var(--ink);
+  font-weight: var(--w-semi);
+}
+
+/* The marker. A bar in the margin rather than a tick on the right, because it
+   lines up down the left edge and the eye finds it without reading. */
+.picker__list button[aria-current]::before {
+  content: '';
+  position: absolute;
+  left: var(--s3);
+  top: 50%;
+  width: 3px;
+  height: 1.1em;
+  translate: 0 -50%;
+  border-radius: var(--r-pill);
+  background: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picker__chev,
+  .picker__list,
+  .picker__list li {
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+}

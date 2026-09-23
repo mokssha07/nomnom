@@ -1,0 +1,120 @@
+.orders {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: var(--s6) var(--s4) var(--s8);
+  display: grid;
+  gap: var(--s5);
+  align-content: start;
+}
+
+.orders__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.orders__nav {
+  display: flex;
+  gap: var(--s4);
+  white-space: nowrap;
+}
+
+/* Words, but thumb-sized: the box is the full 44px even though the type is
+   small, so the target matches the finger rather than the label. */
+.orders__nav a,
+.orders__nav button {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0;
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  text-decoration: none;
+}
+
+.orders__nav a:hover,
+.orders__nav button:hover {
+  color: var(--ink);
+}
+
+.orders__note {
+  color: var(--ink-soft);
+  padding-block: var(--s7);
+  text-align: center;
+}
+
+.orders__error {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-control);
+  background: rgba(224, 112, 90, 0.14);
+  color: var(--signal-late);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.orders__list {
+  display: grid;
+  gap: var(--s3);
+}
+
+/* ── One order ────────────────────────────────────────────────────────
+   Token and status on the first line, the food on the second, the money
+   right-aligned against the token so both columns line up down the list. */
+.orow {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s2) var(--s3);
+  padding: var(--s4) var(--s5);
+  border-radius: var(--r-card);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s var(--ease), transform 0.12s var(--ease);
+}
+
+.orow:hover {
+  border-color: var(--line-lit);
+}
+
+.orow:active {
+  transform: scale(0.995);
+}
+
+/* The chip is as wide as its word. Left to stretch across the middle column
+   it turns into an empty rail, which is the bug this line fixes. */
+.orow .pill {
+  justify-self: start;
+}
+
+.orow__token {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-bold);
+}
+
+.orow__total {
+  font-weight: var(--w-semi);
+}
+
+/* Both of these span the full width on their own row. */
+.orow__items,
+.orow__meta {
+  grid-column: 1 / -1;
+}
+
+.orow__items {
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  /* One line, whatever was ordered — the detail page has the full list. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orow__meta {
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-micro);
+}

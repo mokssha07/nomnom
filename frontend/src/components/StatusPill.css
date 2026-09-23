@@ -1,0 +1,39 @@
+/* A tinted chip, not a solid badge: solid blocks of signal colour at this size
+   fight the brass accent for attention, and only one thing on a page should
+   win that fight. The colour is carried by the text and a thin ring. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem var(--s3);
+  border: 1px solid currentColor;
+  border-radius: var(--r-pill);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-micro);
+  font-weight: var(--w-semi);
+  white-space: nowrap;
+}
+
+/* ACCEPTED shares PLACED's colour: the kitchen has seen it, but nothing is
+   cooking yet, so it should not read as progress on the pan. */
+.pill--placed,
+.pill--accepted {
+  color: var(--signal-wait);
+}
+
+.pill--preparing {
+  color: var(--signal-work);
+}
+
+/* READY is the one a student is waiting for, so it is the only status that
+   gets a fill — it should be findable in a list without reading. */
+.pill--ready {
+  color: var(--accent-ink);
+  background: var(--signal-done);
+  border-color: var(--signal-done);
+}
+
+.pill--completed,
+.pill--cancelled {
+  color: var(--ink-soft);
+  opacity: 0.7;
+}

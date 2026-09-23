@@ -1,0 +1,130 @@
+/* A switch is only convincing if the light agrees with itself. One source,
+   from above: the well is dark at its top edge where the lip overhangs it and
+   catches light along its bottom; the thumb is the opposite, bright on top and
+   shadowed underneath, and it drops a shadow into the well it sits in. */
+
+.modeswitch {
+  --h: 40px;
+  --thumb: 37px;
+
+  position: relative;
+  flex: none;
+  width: calc(var(--thumb) * 2 + 6px);
+  height: var(--h);
+  padding: 0;
+  border-radius: var(--r-pill);
+  /* Darker than the page: the well is cut into the surface, so it sees less
+     of the room than anything around it. */
+  background: linear-gradient(#04130d, #10261c);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.07),
+    0 1px 0 rgba(255, 255, 255, 0.1); /* the lip, lit from above */
+  isolation: isolate; /* keeps the icons' blend to this control */
+  cursor: pointer;
+}
+
+.modeswitch__thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  z-index: 1;
+  width: var(--thumb);
+  height: calc(var(--h) - 6px);
+  border-radius: var(--r-pill);
+  background: linear-gradient(#fdfcf9, #f3ecd8 46%, #d3c7a9 88%, #c2b69a);
+  box-shadow:
+    inset 0 1px 0 #fffdf6,
+    inset 0 -2px 3px -1px rgba(0, 0, 0, 0.3),
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    0 7px 12px -5px rgba(0, 0, 0, 0.85);
+  transition: translate 0.42s cubic-bezier(0.34, 1.32, 0.5, 1);
+}
+
+.modeswitch[data-mode='list'] .modeswitch__thumb {
+  translate: var(--thumb) 0;
+}
+
+/* Pressed, the thumb sinks into the well rather than shrinking: a key that
+   loses its shadow has been pushed down, one that scales has been zoomed. */
+.modeswitch:active .modeswitch__thumb {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 2px 4px rgba(0, 0, 0, 0.25),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* The throw. Two identical keyframes because a CSS one-shot only replays when
+   the animation-name changes, and this one has to fire on every flip.
+
+   The thumb stretches along the direction it is travelling and squashes back
+   past its resting size before settling — mass arriving, not a box sliding.
+   It animates `transform` while the travel itself animates `translate`, which
+   are separate properties, so neither overwrites the other. */
+@keyframes throw-a {
+  0% {
+    transform: scale(1, 1);
+  }
+  32% {
+    transform: scale(1.11, 0.9);
+  }
+  64% {
+    transform: scale(0.96, 1.04);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes throw-b {
+  0% {
+    transform: scale(1, 1);
+  }
+  32% {
+    transform: scale(1.11, 0.9);
+  }
+  64% {
+    transform: scale(0.96, 1.04);
+  }
+  100% {
+    transform: scale(1, 1);
+  }
+}
+
+.modeswitch[data-throw='a'] .modeswitch__thumb {
+  animation: throw-a 0.42s var(--ease);
+}
+
+.modeswitch[data-throw='b'] .modeswitch__thumb {
+  animation: throw-b 0.42s var(--ease);
+}
+
+/* One colour for both icons. Difference against whatever is behind them turns
+   the one under the thumb dark and leaves the one over the well pale, so the
+   switch needs no second rule to say which side is active. */
+.modeswitch__icons {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  place-items: center;
+  color: #ccd3e4;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+
+.modeswitch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modeswitch__thumb {
+    transition: none;
+  }
+
+  .modeswitch[data-throw] .modeswitch__thumb {
+    animation: none;
+  }
+}

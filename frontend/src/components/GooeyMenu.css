@@ -1,0 +1,206 @@
+/* Bottom left of the page, floating over it. Fixed rather than in the flow:
+   the control belongs to the session, not to whatever you have scrolled to.
+
+   Everything here is cut into the page rather than sitting on it, same light
+   as the mode switch — one source from above, so the well is dark at its top
+   edge where the lip overhangs it and catches light along the bottom. The
+   options are the same well, stretched. */
+
+.goo {
+  position: fixed;
+  left: var(--s4);
+  bottom: calc(var(--s4) + env(safe-area-inset-bottom));
+  /* Above the category picker's open list (z-index 5) and the cart bar. */
+  z-index: 6;
+  width: var(--tap);
+  height: var(--tap);
+}
+
+/* Once there is a cart bar the corner is taken, so the menu steps up above it
+   rather than sharing the line.
+
+   ponytail: 7rem is the bar measured, not derived — two lines of count beside a
+   44px button plus its own padding. CSS cannot ask a fixed sibling how tall it
+   is, and a ResizeObserver for one number is not worth the wiring. If the bar's
+   contents change, retune this. */
+.menu:has(.cartbar) .goo {
+  bottom: calc(var(--s4) + 7rem + env(safe-area-inset-bottom));
+}
+
+/* The filter lives in the document, not on screen. */
+.goo__filter {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* ── The blobs ────────────────────────────────────────────────────────
+   Both layers are the same box, the same size, and take the same transform,
+   so a blob and its label travel together. The box is sized for the menu
+   fully open: a filter is clipped to its subject's bounding box, and a blob
+   that leaves that box gets its top sliced off mid-animation.
+
+   The blobs are flat: they only supply the silhouette the goo fuses, and an
+   inset shadow inside a blurred subtree smears into mud. The depth is drawn
+   by the unfiltered layer sitting exactly on top of them. */
+
+.goo__blobs,
+.goo__list {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 11rem;
+  height: calc(var(--tap) + 7rem);
+}
+
+.goo__blobs {
+  filter: url(#goo-blend);
+  pointer-events: none;
+}
+
+.goo__blob {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: var(--tap);
+  border-radius: var(--r-pill);
+  /* The midpoint of the well gradient, so the liquid bridge between two
+     options matches the wells it is joining. */
+  background: #0a1d15;
+}
+
+.goo__blob--trigger {
+  width: var(--tap);
+}
+
+/* Closed, an option is a small ball parked over the trigger — close enough
+   that the goo has already fused it into one shape. Opening only moves it. */
+.goo__blob--item {
+  width: 11rem;
+  transform: translateY(0) scale(0.3);
+  transform-origin: calc(var(--tap) / 2) center;
+  opacity: 0;
+  transition:
+    transform 0.34s var(--spring),
+    opacity 0.2s var(--ease);
+  transition-delay: calc(var(--i) * 40ms);
+}
+
+.goo[data-open] .goo__blob--item {
+  transform: translateY(calc((var(--i) + 1) * -3.5rem)) scale(1);
+  opacity: 1;
+}
+
+/* ── The wells ────────────────────────────────────────────────────────
+   The lit layer. Same boxes as the blobs, drawn without the filter, so this
+   is where the gradient, the inset shadow and the lip go. */
+
+.goo__trigger,
+.goo__item {
+  background: linear-gradient(#04130d, #10261c);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.07),
+    0 1px 0 rgba(255, 255, 255, 0.1); /* the lip, lit from above */
+  color: var(--sage);
+}
+
+.goo__trigger {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--r-pill);
+  transition:
+    transform 0.34s var(--spring),
+    color 0.15s var(--ease);
+}
+
+.goo__trigger:hover {
+  color: var(--accent);
+}
+
+.goo[data-open] .goo__trigger {
+  transform: rotate(90deg);
+  color: var(--accent);
+}
+
+.goo__list {
+  pointer-events: none;
+}
+
+.goo__item {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 11rem;
+  height: var(--tap);
+  padding-inline: var(--s5);
+  border-radius: var(--r-pill);
+  font-size: var(--t-body);
+  font-weight: var(--w-medium);
+  letter-spacing: var(--tr-body);
+  text-align: left;
+  opacity: 0;
+  transform: translateY(0) scale(0.3);
+  transform-origin: calc(var(--tap) / 2) center;
+  transition:
+    transform 0.34s var(--spring),
+    opacity 0.14s var(--ease),
+    color 0.15s var(--ease);
+  transition-delay: calc(var(--i) * 40ms);
+}
+
+/* The word only appears once its well has arrived — text that rides the whole
+   stretch smears, and reading it is the point. */
+.goo[data-open] .goo__item {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(calc((var(--i) + 1) * -3.5rem)) scale(1);
+  transition-delay: calc(var(--i) * 40ms + 120ms);
+}
+
+.goo__item:hover {
+  color: var(--accent);
+}
+
+/* Pressed, the option sinks the rest of the way in: the lip goes out and the
+   inset deepens, so the well swallows the tap. */
+.goo__item:active {
+  box-shadow:
+    inset 0 3px 6px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.05);
+}
+
+.goo__item:focus-visible,
+.goo__trigger:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* No liquid, no stretch: the options just appear in place. */
+@media (prefers-reduced-motion: reduce) {
+  .goo__blobs {
+    filter: none;
+  }
+
+  .goo__blob--item,
+  .goo__item {
+    transition: opacity 0.1s linear;
+    transition-delay: 0s;
+    transform: translateY(calc((var(--i) + 1) * -3.5rem));
+  }
+
+  .goo[data-open] .goo__blob--item,
+  .goo[data-open] .goo__item {
+    transform: translateY(calc((var(--i) + 1) * -3.5rem));
+  }
+
+  .goo[data-open] .goo__trigger,
+  .goo__trigger {
+    transition: none;
+  }
+}

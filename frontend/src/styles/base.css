@@ -1,0 +1,184 @@
+/* Reset, element defaults, the ground, and the handful of utilities every
+   page shares. Page-specific rules live next to their page, never here. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background: var(--bg);
+}
+
+/* The kitchen board covers the window itself, so the canvas under it never
+   shows — until the browser leaves a band unpainted after the window is
+   resized, or someone overscrolls. Chromium fills those with the document's
+   background colour, so give the canvas the board's floor on this route and
+   a band is invisible instead of black. */
+html:has(.board) {
+  background: var(--forest-950);
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  /* Deliberately NO background here. The page colour lives on <html> (which
+     paints the canvas), leaving body free for the ground and grain below — a
+     z-index:-1 child paints behind its own parent's background, so giving
+     body one would hide both completely. */
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--t-body);
+  font-weight: var(--w-regular);
+  line-height: var(--lh-body);
+  letter-spacing: var(--tr-body);
+  /* The opsz axis is why we load that build of Inter — this switches the
+     Text and Display cuts automatically by size, like SF does. */
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── The ground ───────────────────────────────────────────────────────
+   One long fall from forest 700 at the top to forest 900 at the bottom —
+   the same wall the receipt prints against, so every page is in one room.
+   Fixed rather than scrolling, so the light stays where it is while content
+   moves past it. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(var(--surface-solid), var(--bg));
+}
+
+/* ── The matte finish ─────────────────────────────────────────────────
+   A fine grain over the whole page. Flat colour on a screen reads as a fill;
+   the same colour under grain reads as paint. This is the only thing between
+   this palette and a glossy one. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--grain) 0 0 / 220px 220px;
+  mix-blend-mode: overlay;
+  opacity: 0.3;
+}
+
+/* The board is flat by design: a wall display read through steam wants the
+   plainest possible surface, so it takes neither the fall nor the grain. */
+[data-surface='board']::before,
+[data-surface='board']::after {
+  display: none;
+}
+
+/* Headings set weight and margin only. Size and tracking are a matched pair
+   and belong together at the call site, so a page picks --t-title WITH
+   --tr-title. A single letter-spacing here would be wrong at every size but
+   one — which is exactly the thing Apple's type never gets wrong. */
+h1,
+h2,
+h3 {
+  font-weight: var(--w-semi);
+  line-height: var(--lh-tight);
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--t-display);
+  letter-spacing: var(--tr-display);
+  line-height: var(--lh-display);
+}
+
+h2 {
+  font-size: var(--t-title);
+  letter-spacing: var(--tr-title);
+}
+
+h3 {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+}
+
+p {
+  margin: 0;
+}
+
+/* Prices, totals and token numbers must line up in columns. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+input {
+  font: inherit;
+  color: inherit;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ── Panels ───────────────────────────────────────────────────────────
+   One class, three depths via the --layer-* tokens. Matte: no blur and no
+   saturation, because both of those are gloss. What sells it as a physical
+   sheet instead is the pair of edges — a hairline lit along the top, the
+   stacked shadow underneath. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--lift), inset 0 1px 0 rgba(251, 246, 232, 0.07);
+}
+
+/* Visible keyboard focus everywhere, on the accent so it reads as
+   "you are here" rather than as an error. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: var(--r-control);
+}
+
+/* Screen-reader-only text, for labels a sighted user gets from context. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

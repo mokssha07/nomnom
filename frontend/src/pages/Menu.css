@@ -1,0 +1,195 @@
+/* Mobile-first. The column stops at --page on a laptop rather than stretching:
+   a menu read at arm's length wants one short column, not three wide ones. */
+
+.menu {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: var(--s6) var(--s4);
+  /* Room for the floating cart bar, plus the phone's home indicator. */
+  padding-bottom: calc(var(--s8) + var(--tap) + env(safe-area-inset-bottom));
+  display: grid;
+  gap: var(--s6);
+  /* The picks rail breaks out to the full viewport width; clip rather than
+     hidden so the category picker can still open downwards past this box. */
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.menu__note {
+  color: var(--ink-soft);
+  padding-block: var(--s7);
+  text-align: center;
+}
+
+.menu__head {
+  display: grid;
+  gap: var(--s2);
+}
+
+/* The switch shares a line with the title and nothing else — the line under it
+   is a full-width sentence, and pinching it into a column to clear a control
+   costs more than the control saves. */
+.menu__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+}
+
+.menu__hours {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+/* In carousel mode the rail is the page, so it gets the size to match — the
+   one number the whole arc is derived from. */
+.menu--spotlight .arc {
+  --pic: 168px;
+}
+
+/* ── Category ─────────────────────────────────────────────────────────── */
+
+.group {
+  display: grid;
+  gap: var(--s4);
+}
+
+/* Sticks under nothing — there is no app bar — so it just marks the section
+   and gets out of the way. */
+.group__name {
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  color: var(--ink-soft);
+  font-weight: var(--w-medium);
+}
+
+.group__items {
+  display: grid;
+  gap: var(--s3);
+}
+
+/* ── Dish ─────────────────────────────────────────────────────────────── */
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s4);
+  padding: var(--s4);
+  border-radius: var(--r-card);
+  background: var(--surface-raised);
+}
+
+.item__photo {
+  width: 88px;
+  height: 88px;
+  border-radius: var(--r-control);
+  object-fit: cover;
+  /* Photos are shot on different surfaces; a hairline keeps the pale ones
+     from bleeding into the glass behind them. */
+  border: 1px solid var(--line);
+}
+
+.item__body {
+  display: grid;
+  align-content: start;
+  gap: var(--s1);
+  min-width: 0;
+}
+
+.item__name {
+  font-size: var(--t-body);
+  letter-spacing: var(--tr-body);
+  font-weight: var(--w-semi);
+}
+
+.item__desc {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  line-height: 1.35;
+}
+
+.item__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-top: var(--s2);
+}
+
+/* The one bold thing on the card. */
+.item__price {
+  font-size: var(--t-price);
+  letter-spacing: var(--tr-price);
+  font-weight: var(--w-bold);
+}
+
+.item--out {
+  opacity: 0.5;
+}
+
+.item__out {
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  color: var(--ink-soft);
+}
+
+/* ── Cart bar ─────────────────────────────────────────────────────────── */
+
+.cartbar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  padding: var(--s4);
+  padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom));
+  pointer-events: none; /* the page keeps scrolling either side of the bar */
+}
+
+.cartbar__inner {
+  max-width: calc(var(--page) - var(--s6));
+  margin-inline: auto;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  padding: var(--s3) var(--s3) var(--s3) var(--s5);
+  border-radius: var(--r-pill);
+  /* A dark scrim, not the usual cream-tinted .panel. This bar floats over the
+     brightest part of the aurora, and white-on-white-tint at 13px was the one
+     place in the app you had to squint. Styled here rather than by adding
+     .panel, so there is no two-single-class specificity tie to lose. */
+  background: color-mix(in srgb, var(--forest-950) 78%, transparent);
+  backdrop-filter: blur(var(--blur)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(140%);
+  border: 1px solid var(--line);
+  box-shadow: var(--lift);
+}
+
+.cartbar__count {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.cartbar__total {
+  display: block;
+  color: var(--ink);
+  font-size: var(--t-lead);
+  letter-spacing: var(--tr-lead);
+  font-weight: var(--w-semi);
+}
+
+.cartbar__go {
+  height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--s5);
+  border-radius: var(--r-pill);
+  background: var(--pill);
+  color: var(--pill-ink);
+  font-weight: var(--w-semi);
+  text-decoration: none;
+  white-space: nowrap;
+}

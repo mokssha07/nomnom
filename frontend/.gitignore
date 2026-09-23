@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+*.local
+.playwright-mcp
+
+# Full-size dish photos. Only the compressed WebP in src/assets/food/ ships;
+# keep the originals locally so `npm run photos` can be re-run.
+src/assets/raw
+design-refs
+
+# Local Claude Code permissions — machine-specific, not project config.
+.claude/settings.local.json

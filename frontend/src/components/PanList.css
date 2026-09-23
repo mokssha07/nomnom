@@ -1,0 +1,83 @@
+/* The what-to-cook-next panel, beside the tickets.
+   Same orders as the cards, added up by dish and sorted oldest first — a
+   cook works in pans, not in tickets. */
+
+.pans {
+  display: grid;
+  align-content: start;
+  gap: var(--s3);
+  padding: var(--s4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+
+.pans__head {
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  font-weight: var(--w-semi);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.pans__empty {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.pans__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pan {
+  display: grid;
+  grid-template-columns: 1.75rem 1fr auto;
+  align-items: baseline;
+  gap: var(--s1) var(--s2);
+  padding: var(--s2) 0 var(--s2) var(--s2);
+  border-top: 1px solid var(--line);
+  border-left: 2px solid transparent;
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+.pan:first-child {
+  border-top: 0;
+}
+
+.pan__qty {
+  font-weight: var(--w-semi);
+}
+
+.pan__qty::after {
+  content: '×';
+  margin-left: 0.1em;
+  color: var(--ink-soft);
+}
+
+.pan__wait {
+  color: var(--ink-soft);
+}
+
+/* Only printed when the pile is split across tickets — four dosas for one
+   order plate together, four for four orders do not. */
+.pan__split {
+  grid-column: 2 / -1;
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-micro);
+}
+
+.pan--late {
+  border-left-color: var(--signal-late);
+}
+
+.pan--late .pan__wait {
+  color: var(--signal-late);
+}

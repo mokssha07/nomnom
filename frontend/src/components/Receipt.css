@@ -1,0 +1,390 @@
+/* The one lit screen in the app.
+   The room is the page's own forest ground and grain, showing through from
+   base.css — this file only adds the light the machine throws on it. The
+   printer and the paper take no tokens at all: brass is brass and paper is
+   paper, and a till roll that changed colour with the theme would stop
+   being a till roll. */
+
+.printout {
+  /* Stretched on one axis, which is what turns a flat gradient into brushed
+     metal. The even grain that mattes the room is --grain, in tokens.css, and
+     is inherited. Inline so the screen still draws with the network unplugged. */
+  --brushed: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='140'%3E%3Cfilter id='d' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012 2.2' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.40  0 0 0 0 0.24  0 0 0 0 0.03  0.75 0 0 0 -0.27'/%3E%3C/filter%3E%3Cfilter id='l' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.010 2.6' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.86  0.75 0 0 0 -0.32'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)'/%3E%3Crect width='100%25' height='100%25' filter='url(%23l)'/%3E%3C/svg%3E");
+
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  /* The lamp is 130% wide on purpose, so on a phone it hangs past both edges
+     and the page grows a sideways scrollbar for a blur nobody can look at.
+     `clip` rather than `hidden`: hidden on one axis forces `auto` on the
+     other, which would put a second scrollbar on the paper. */
+  overflow-x: clip;
+  /* Lamp above, shadow on the floor. Nothing opaque, so the page's ground
+     and its grain carry straight through. */
+  background:
+    radial-gradient(70% 45% at 25% 0%, rgba(253, 252, 249, 0.05), transparent 70%),
+    radial-gradient(90% 60% at 50% 100%, rgba(0, 0, 0, 0.22), transparent 70%);
+}
+
+.stage {
+  --drop: clamp(28px, 8vh, 72px); /* air above the machine */
+  --bar: 54px; /* the roller */
+  --stub: 62px; /* how much paper shows before it prints */
+
+  position: relative;
+  width: min(92vw, 380px);
+  margin: auto;
+  padding-block: var(--s5) var(--s6);
+}
+
+/* The lamp inside the machine. It comes up while the motor is running, which
+   is the only thing on this screen that says the machine is working. */
+.stage__glow {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--drop) - 4px);
+  width: 130%;
+  height: 170px;
+  translate: -50% 0;
+  background: radial-gradient(closest-side, rgba(255, 184, 64, 0.55), transparent 100%);
+  filter: blur(22px);
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+[data-state='printing'] .stage__glow {
+  opacity: 0.42;
+}
+
+/* ── The machine ──────────────────────────────────────────────────────────
+   One roller and two end caps. A printer drawn as a printer — body, lid,
+   buttons — is a cartoon of one; the only parts that do any work in this
+   picture are the lip the paper leaves and the caps holding the roll. */
+
+.printer {
+  position: relative;
+  height: var(--bar);
+  margin-top: var(--drop);
+  z-index: 4;
+}
+
+/* Satin brass: cylinder shading, one specular band across the top, a brushed
+   grain, and a little green bounce off the room below. */
+.printer__bar {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px 20px 11px 11px;
+  background:
+    linear-gradient(
+      rgba(255, 255, 255, 0) 0 10%,
+      rgba(255, 255, 255, 0.78) 20%,
+      rgba(255, 255, 255, 0) 34%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(105, 58, 4, 0.3) 0,
+      rgba(105, 58, 4, 0) 5%,
+      rgba(105, 58, 4, 0) 95%,
+      rgba(105, 58, 4, 0.3) 100%
+    ),
+    var(--brushed) 0 0 / 320px 140px,
+    linear-gradient(#fffbee 0%, #f9e9c0 15%, #eed08c 43%, #dcae59 71%, #c78e32 89%, #e7be70 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(140, 84, 8, 0.55),
+    inset 0 -9px 12px -7px rgba(112, 62, 6, 0.38),
+    inset 0 -3px 6px -3px rgba(56, 140, 104, 0.28),
+    0 1px 1px rgba(0, 0, 0, 0.22),
+    0 5px 8px -2px rgba(0, 0, 0, 0.26),
+    0 14px 22px -6px rgba(0, 0, 0, 0.3),
+    0 30px 44px -14px rgba(0, 0, 0, 0.32),
+    0 0 34px 0 rgba(255, 176, 56, 0.14);
+}
+
+.printer__cap {
+  --sx: 1; /* flips every shadow for the right-hand cap */
+  --dir: 90deg;
+
+  position: absolute;
+  top: 0;
+  width: 20px;
+  height: calc(var(--bar) + 54px);
+  background:
+    linear-gradient(
+      rgba(255, 255, 255, 0.6) 0,
+      rgba(255, 255, 255, 0) 20%,
+      rgba(0, 0, 0, 0) 66%,
+      rgba(108, 58, 2, 0.3) 100%
+    ),
+    var(--brushed) 0 0 / 320px 140px,
+    linear-gradient(var(--dir), #b07c28 0%, #eccd86 11%, #fff6d8 27%, #f4db98 52%, #d9a850 82%, #a97726 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset calc(1.5px * var(--sx)) 0 0 rgba(255, 255, 255, 0.55),
+    inset calc(-2px * var(--sx)) -3px 5px rgba(100, 56, 2, 0.28),
+    calc(3px * var(--sx)) 2px 5px rgba(0, 0, 0, 0.3),
+    0 9px 14px -3px rgba(0, 0, 0, 0.34),
+    0 26px 34px -12px rgba(0, 0, 0, 0.34);
+}
+
+.printer__cap--l {
+  left: 0;
+  border-radius: 20px 5px 13px 15px;
+}
+
+.printer__cap--r {
+  right: 0;
+  border-radius: 5px 20px 15px 13px;
+  --sx: -1;
+  --dir: 270deg;
+}
+
+/* The motor. Sub-pixel on purpose: any more and the machine looks broken. */
+[data-state='printing'] .printer {
+  animation: hum 0.09s linear infinite;
+}
+
+@keyframes hum {
+  50% {
+    transform: translateY(0.8px);
+  }
+}
+
+/* ── The paper ────────────────────────────────────────────────────────────
+   The slot is a fixed window the full height of the roll; the roll slides
+   inside it. Only the top is clipped, so the paper's own shadow can still
+   fall past the sides and bottom. */
+
+.slot {
+  position: relative;
+  z-index: 2;
+  width: 90%;
+  height: var(--paper-h, 480px);
+  margin: -2px auto 0;
+  clip-path: inset(0 -40px -60px -40px);
+}
+
+/* The machine's shadow, thrown down the first inch of paper. It belongs to the
+   machine, not the roll, so it stays at the slot while the paper moves. */
+.slot__shade {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 38px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    rgba(58, 28, 2, 0.62) 0%,
+    rgba(112, 60, 8, 0.42) 26%,
+    rgba(196, 128, 36, 0.16) 62%,
+    rgba(255, 230, 170, 0) 100%
+  );
+}
+
+/* The animated part. The shadow lives out here rather than on the paper: the
+   paper carries the torn-edge mask, and a mask cuts a box-shadow away with the
+   teeth, while a filter on the parent survives it. */
+.slot__feed {
+  will-change: transform;
+  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.42));
+}
+
+.receipt {
+  --tooth: 4px;
+  --paper-ink: #2f2a22;
+  --paper-strong: #4a3210;
+  --paper-mute: #a08a5c;
+  --paper-gold: #b78a45;
+  --paper-rule: #ebe1c8;
+
+  padding: 22px 21px 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  color: var(--paper-ink);
+  /* Warm at the slot where the lamp is, cooling to plain paper by the time it
+     is fully out. */
+  background: linear-gradient(#fff1c6 0%, #fff9e6 26%, #fdfcf9 68%);
+  /* The torn edge: one conic gradient tiled along the bottom, opaque through
+     the 90° that points down. It rides the emerging edge all the way out. */
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--tooth)) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% /
+    calc(2 * var(--tooth)) 100%;
+}
+
+.receipt__rule {
+  height: 1px;
+  margin: 0;
+  border: 0;
+  background: var(--paper-rule);
+}
+
+.receipt__rule--gold {
+  background: linear-gradient(90deg, transparent, #e6cf9c 20%, #e6cf9c 80%, transparent);
+}
+
+/* ── What is printed on it ───────────────────────────────────────────────── */
+
+.receipt__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--s4);
+  padding-bottom: 22px;
+}
+
+.receipt__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--paper-strong);
+}
+
+.receipt__amount {
+  margin-top: 9px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--paper-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt__meta {
+  margin-top: 8px;
+  font-size: 8.5px;
+  line-height: 1.7;
+  letter-spacing: 0.08em;
+  color: var(--paper-mute);
+}
+
+/* The counter's stamp: a solid disc with the ring printed inside its edge, the
+   way a rubber stamp puts it there — not an outline with a hole in it. */
+.receipt__seal {
+  position: relative;
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #0f6b46;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 50, 30, 0.35);
+}
+
+.receipt__seal::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(255, 255, 255, 0.8);
+}
+
+.receipt__seal span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: italic 800 12px/1 Georgia, 'Times New Roman', serif;
+  letter-spacing: -0.02em;
+  rotate: -7deg;
+}
+
+.receipt__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s4);
+  font-size: 13.5px;
+  line-height: 1;
+}
+
+.receipt__items {
+  list-style: none;
+  display: grid;
+  gap: 13px;
+  padding: 21px 0;
+}
+
+.receipt__sums {
+  display: grid;
+  gap: 15px;
+  padding: 21px 0;
+}
+
+.receipt__total {
+  padding: 20px 0;
+  color: var(--paper-gold);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The stub: the one line left showing while the roll waits inside. */
+.receipt__note {
+  height: var(--stub);
+  display: grid;
+  place-items: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--paper-rule);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  color: var(--paper-strong);
+}
+
+/* ── After the print ─────────────────────────────────────────────────────── */
+
+.printout__after {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+  margin-top: var(--s6);
+  /* Held back until the paper has stopped. Offering the next step while the
+     machine is still running turns the animation into a loading screen. */
+  opacity: 0;
+  translate: 0 8px;
+  pointer-events: none;
+  transition:
+    opacity 0.4s var(--ease),
+    translate 0.4s var(--ease);
+}
+
+[data-state='done'] .printout__after {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+.printout__go {
+  height: var(--tap);
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--s6);
+  border-radius: var(--r-pill);
+  background: var(--pill);
+  color: var(--pill-ink);
+  font-weight: var(--w-semi);
+  text-decoration: none;
+  box-shadow: var(--lift);
+}
+
+.printout__replay {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-pill);
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  font-weight: var(--w-medium);
+  transition: color 0.2s linear;
+}
+
+.printout__replay:hover {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-state='printing'] .printer {
+    animation: none;
+  }
+
+  .stage__glow,
+  .printout__after {
+    transition-duration: 0.01s;
+  }
+}

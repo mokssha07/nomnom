@@ -1,0 +1,10 @@
+.icon {
+  display: block;
+  width: 1.0625rem;
+  height: 1.0625rem;
+}
+
+.icon--sm {
+  width: 0.875rem;
+  height: 0.875rem;
+}

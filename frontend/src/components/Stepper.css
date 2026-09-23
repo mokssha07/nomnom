@@ -1,0 +1,103 @@
+/* Both states are the same height and sit on the same baseline, so a card
+   doesn't jump when the first item goes into the cart. */
+
+.stepper__add,
+.stepper {
+  height: var(--tap);
+  border-radius: var(--r-pill);
+}
+
+/* The one object on the menu meant to look pressable rather than drawn: a
+   moulded cream key standing off the card.
+
+   The depth is a stack, not a blur: a rim light around the whole edge, a face
+   lit from the top, a shaded base, then four drops at widening radii — a tight
+   contact shadow that says the key is touching something, and three softer ones
+   that carry the height. Pressing it inverts every layer at once, so the key
+   goes down into the card rather than shrinking on the spot. */
+.stepper__add {
+  padding-inline: var(--s5);
+  background-image: linear-gradient(
+    180deg,
+    var(--cream-50) 0%,
+    var(--pill) 46%,
+    var(--cream-300) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--ink-green) 24%, transparent);
+  color: var(--pill-ink);
+  font-size: var(--t-body);
+  font-weight: var(--w-semi);
+  letter-spacing: var(--tr-body);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -3px 4px rgba(16, 38, 28, 0.24),
+    0 1px 1px rgba(0, 0, 0, 0.32),
+    0 4px 6px -2px rgba(0, 0, 0, 0.36),
+    0 11px 20px -6px rgba(0, 0, 0, 0.48),
+    0 22px 36px -12px rgba(0, 0, 0, 0.42);
+  transition:
+    transform 0.12s var(--ease),
+    box-shadow 0.12s var(--ease);
+}
+
+/* Lifted further, not just brightened: the drops lengthen together and the
+   brass whisper appears underneath so the extra height reads as warm light. */
+.stepper__add:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -3px 4px rgba(16, 38, 28, 0.24),
+    0 1px 1px rgba(0, 0, 0, 0.32),
+    0 6px 10px -3px rgba(0, 0, 0, 0.38),
+    0 16px 28px -8px rgba(0, 0, 0, 0.5),
+    0 30px 48px -16px rgba(0, 0, 0, 0.45),
+    var(--lift-accent);
+}
+
+/* Pressed: the face darkens at the top, the highlight moves to the bottom
+   edge, and the contact shadow all but disappears. */
+.stepper__add:active {
+  transform: translateY(3px);
+  background-image: linear-gradient(
+    180deg,
+    var(--cream-300) 0%,
+    var(--pill) 62%,
+    var(--pill) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(16, 38, 28, 0.12),
+    inset 0 3px 6px rgba(16, 38, 28, 0.34),
+    inset 0 -2px 0 rgba(255, 255, 255, 0.6),
+    0 1px 1px rgba(0, 0, 0, 0.22);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-control);
+  border: 1px solid var(--line);
+}
+
+/* Square-ish keys at the full tap height. The minus is the one people miss,
+   so it gets exactly as much room as the plus. */
+.stepper__key {
+  width: var(--tap);
+  height: var(--tap);
+  border-radius: var(--r-pill);
+  font-size: var(--t-lead);
+  line-height: 1;
+  color: var(--ink);
+}
+
+.stepper__key:active {
+  background: var(--line-lit);
+}
+
+.stepper__qty {
+  min-width: 1.5rem;
+  text-align: center;
+  font-size: var(--t-body);
+  font-weight: var(--w-semi);
+}

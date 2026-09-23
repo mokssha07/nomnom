@@ -1,0 +1,232 @@
+.order {
+  max-width: var(--page);
+  margin-inline: auto;
+  padding: var(--s6) var(--s4) var(--s8);
+  display: grid;
+  gap: var(--s5);
+  align-content: start;
+}
+
+.order__head {
+  display: flex;
+}
+
+.order__back {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  text-decoration: none;
+}
+
+.order__back::before {
+  content: '‹ ';
+}
+
+.order__back:hover {
+  color: var(--ink);
+}
+
+.order__note {
+  color: var(--ink-soft);
+  padding-block: var(--s6);
+  text-align: center;
+}
+
+.order__error {
+  padding: var(--s3) var(--s4);
+  border-radius: var(--r-control);
+  background: rgba(224, 112, 90, 0.14);
+  color: var(--signal-late);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+/* ── The number ───────────────────────────────────────────────────────
+   The one thing on this page that is read from arm's length, across a
+   counter, so it takes the hero size and the only bold weight here. */
+.order__token {
+  text-align: center;
+  display: grid;
+  gap: var(--s1);
+}
+
+.order__label {
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.order__number {
+  font-size: var(--t-hero);
+  letter-spacing: var(--tr-hero);
+  line-height: var(--lh-display);
+  font-weight: var(--w-bold);
+  color: var(--accent);
+}
+
+.order__placed {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+/* ── The track ────────────────────────────────────────────────────────
+   Five steps on one line, joined by the rule behind the dots. The line is
+   drawn by each step's own ::before so it can be coloured per step — which
+   is what makes the filled part stop exactly at the current one. */
+.track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.track__step {
+  display: grid;
+  justify-items: center;
+  gap: var(--s2);
+  position: relative;
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-micro);
+}
+
+/* The connector runs left out of each step to the one before it, so the
+   first step has nothing to draw and the line never overhangs the row. */
+.track__step::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  background: var(--line);
+}
+
+.track__step:first-child::before {
+  display: none;
+}
+
+.track__step.is-done::before {
+  background: var(--signal-done);
+}
+
+.track__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface-control);
+  border: 2px solid var(--line);
+  /* above the connector, so the line appears to run behind it */
+  position: relative;
+}
+
+.track__step.is-done .track__dot {
+  background: var(--signal-done);
+  border-color: var(--signal-done);
+}
+
+.track__step.is-now {
+  color: var(--ink);
+  font-weight: var(--w-semi);
+}
+
+.track__step.is-now .track__dot {
+  box-shadow: 0 0 0 4px rgba(82, 164, 134, 0.22);
+}
+
+/* Off the line entirely: no dots, no progress, just the fact. */
+.track--void {
+  display: block;
+  text-align: center;
+  padding: var(--s3);
+  border-radius: var(--r-control);
+  background: var(--surface-control);
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Lines ────────────────────────────────────────────────────────────── */
+
+.order__lines {
+  border-radius: var(--r-panel);
+  padding: var(--s2) var(--s5);
+}
+
+.oline {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: var(--s3);
+  padding-block: var(--s3);
+  border-bottom: 1px solid var(--line);
+}
+
+.oline:last-child {
+  border-bottom: 0;
+}
+
+.oline__qty {
+  color: var(--ink-soft);
+}
+
+.oline__price {
+  font-weight: var(--w-medium);
+}
+
+.oline--total {
+  grid-template-columns: 1fr auto;
+}
+
+.oline--total .oline__name,
+.oline--total .oline__price {
+  font-size: var(--t-price);
+  letter-spacing: var(--tr-price);
+  font-weight: var(--w-bold);
+}
+
+.order__terms {
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  text-align: center;
+}
+
+/* ── Cancel ───────────────────────────────────────────────────────────
+   Quiet until it is armed. Destructive buttons that look destructive all
+   day invite the tap they are warning against, so it only turns red once
+   it is actually about to do something. */
+.order__cancel {
+  justify-self: center;
+  padding: var(--s3) var(--s5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.order__cancel:hover {
+  color: var(--ink);
+  border-color: var(--ink-soft);
+}
+
+.order__cancel.is-armed {
+  color: var(--signal-late);
+  border-color: var(--signal-late);
+  background: rgba(224, 112, 90, 0.1);
+}
+
+.order__cancel:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

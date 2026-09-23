@@ -1,0 +1,107 @@
+/* The five readings across the top of the board.
+   One card each: a tinted icon, the label it answers, the number, and one
+   line of context under it so the number is never read alone. */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--s3);
+}
+
+.stat {
+  display: grid;
+  align-content: start;
+  gap: var(--s1);
+  padding: var(--s3) var(--s4);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+}
+
+.stat__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+}
+
+/* The tint is the only colour on a healthy board: enough to tell the five
+   cards apart at a glance, not enough to read as an alarm. */
+.stat__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.875rem;
+  height: 1.875rem;
+  border-radius: var(--r-control);
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.stat__icon--wait { color: var(--signal-wait); }
+.stat__icon--work { color: var(--signal-work); }
+.stat__icon--done { color: var(--signal-done); }
+
+.stat__value {
+  font-size: var(--t-title);
+  letter-spacing: var(--tr-title);
+  line-height: var(--lh-tight);
+  font-weight: var(--w-semi);
+}
+
+/* Only when the oldest ticket has actually gone past the threshold. */
+.stat__value--late {
+  color: var(--signal-late);
+}
+
+.stat__note {
+  color: var(--ink-soft);
+  font-size: var(--t-micro);
+  letter-spacing: var(--tr-micro);
+}
+
+/* ── The nudges ────────────────────────────────────────────────────────
+   The only lines on the board that ask for something that is not cooking.
+   Both appear only when they are true. */
+
+.nudges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+.nudge {
+  flex: 1 1 18rem;
+  padding: var(--s2) var(--s4);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r-control);
+  background: var(--surface-raised);
+  font-size: var(--t-small);
+  letter-spacing: var(--tr-small);
+  line-height: var(--lh-body);
+}
+
+.nudge__token {
+  font-weight: var(--w-semi);
+}
+
+.nudge--late {
+  border-left-color: var(--signal-late);
+  color: var(--signal-late);
+}
+
+@media (max-width: 78rem) {
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  }
+}
+
+/* Two abreast on a phone. One column of readings is 500px of scrolling
+   before the first ticket, which is the wrong thing to make someone do. */
+@media (max-width: 48rem) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
