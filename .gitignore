@@ -7,3 +7,6 @@ media/
 node_modules/
 ftp_data/
 .DS_Store
+
+# Daily sales backups contain student usernames: keep them out of git.
+backend/backups/

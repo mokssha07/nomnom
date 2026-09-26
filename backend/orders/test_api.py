@@ -98,3 +98,20 @@ class KitchenSocketAuthTest(TransactionTestCase):
         self.assertFalse(self.connects("?token=nonsense"))
         self.assertFalse(self.connects(f"?token={Token.objects.create(user=student).key}"))
         self.assertTrue(self.connects(f"?token={Token.objects.create(user=staff).key}"))
+
+
+class OrderRateLimitTest(TransactionTestCase):
+    def test_placing_orders_is_capped_per_student_but_listing_is_not(self):
+        from django.core.cache import cache
+        cache.clear()
+        counter = Counter.objects.create(name="Main Kitchen", slug="main")
+        item = MenuItem.objects.create(name="Chai", price=15, counter=counter,
+                                       category=Category.objects.create(name="Drinks"))
+        client = APIClient()
+        client.force_authenticate(User.objects.create_user(username="s1", password="pass12345"))
+        codes = [client.post("/api/orders/", {"counter_id": counter.id, "idempotency_key": f"k{i}",
+                                              "items": [{"menu_item_id": item.id, "quantity": 1}]},
+                             format="json").status_code for i in range(31)]
+        self.assertEqual(codes[:30], [201] * 30)
+        self.assertEqual(codes[30], 429)
+        self.assertEqual(client.get("/api/orders/").status_code, 200)

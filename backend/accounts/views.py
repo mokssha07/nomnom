@@ -1,4 +1,4 @@
-from rest_framework import generics, status
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -40,3 +40,12 @@ class LoginView(APIView):
             )
         token, _ = Token.objects.get_or_create(user=user)
         return Response({"token": token.key, "role": user.role, "user_id": user.id})
+
+
+class LogoutView(APIView):
+    """Deletes the token on the server, so a copied token stops working too."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        request.auth.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -41,6 +41,16 @@ class DispatcherTests(unittest.TestCase):
     def publisher(self):
         return self.connect(self.d.ingest_port)
 
+    def test_ingest_only_accepts_connections_from_this_machine(self):
+        # Even when the dispatcher is told to listen on every interface (the
+        # real default), publishers must only be accepted from this machine.
+        d = Dispatcher(host="0.0.0.0", ingest_port=0, broadcast_port=0)
+        d.start()
+        self.addCleanup(d.stop)
+        ingest, broadcast = d._listeners
+        self.assertEqual(ingest.getsockname()[0], "127.0.0.1")
+        self.assertEqual(broadcast.getsockname()[0], "0.0.0.0")   # displays can still listen
+
     def test_event_reaches_every_subscriber(self):
         sub1, sub2 = self.subscriber(), self.subscriber()
         send_message(self.publisher(), {"type": "order_created", "order_id": 1})

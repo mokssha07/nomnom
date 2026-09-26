@@ -44,3 +44,9 @@ class RegisterAndLoginTest(TestCase):
         r = self.client.post("/api/auth/login/", {"username": "riya", "password": "Canteen#Test2026"},
                              format="json")
         self.assertEqual(r.status_code, 429)
+
+    def test_logout_kills_the_token_on_the_server(self):
+        token = self.register().data["token"]
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+        self.assertEqual(self.client.post("/api/auth/logout/").status_code, 204)
+        self.assertEqual(self.client.get("/api/orders/").status_code, 401)

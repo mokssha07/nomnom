@@ -262,9 +262,10 @@ export async function register(details) {
  */
 export const getMe = () => Promise.resolve(user);
 
-/** No /auth/logout/ either. The token is gone from this browser, which is what
- *  signing out means here; the server can expire its own copy. */
+/** Deletes the token on the server too, so a copied token stops working.
+ *  Signing out still succeeds locally if that request fails (e.g. offline). */
 export const logout = async () => {
+  await request('/auth/logout/', { method: 'POST' }).catch(() => {});
   setSession(null, null);
 };
 

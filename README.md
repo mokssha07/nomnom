@@ -58,8 +58,12 @@ pip install -r requirements.txt
 cp ../.env.example .env         # then edit .env: DATABASE_URL, SECRET_KEY, DEBUG=True
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver      # localhost only, on purpose: see below
 ```
+
+Keep Django on `127.0.0.1`. Phones and other laptops reach it through the Vite
+server, which passes on their real IP for the login rate limit. Exposing Django
+directly (`0.0.0.0:8000`) would let anyone fake that IP and dodge the limit.
 
 In `/admin/`, create at least one Counter, some Categories and Menu items (or import a
 CSV, see below), and set a user's role to `staff` to use the kitchen board.

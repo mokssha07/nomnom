@@ -17,6 +17,14 @@ NOT_FOUND = {"error": "not_found", "detail": "Order not found."}
 class OrderListCreateView(generics.ListCreateAPIView):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = 'orders'
+
+    def get_throttles(self):
+        # Only placing orders is limited (per student). Every order emails the
+        # sign-up address, which nobody verifies, so this caps how hard one
+        # account can spam someone's inbox or hoard stock. GET is the kitchen
+        # board's 4-second poll and must never be throttled.
+        return super().get_throttles() if self.request.method == 'POST' else []
 
     def get_queryset(self):
         user = self.request.user

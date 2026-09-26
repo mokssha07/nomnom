@@ -147,7 +147,11 @@ REST_FRAMEWORK = {
     # Login/register only (views set throttle_scope = 'auth'): slows password guessing.
     # ponytail: counts live in the local-memory cache, so per process. Fine for one server.
     'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.ScopedRateThrottle'],
-    'DEFAULT_THROTTLE_RATES': {'auth': '10/min'},
+    'DEFAULT_THROTTLE_RATES': {'auth': '10/min', 'orders': '30/hour'},
+    # Requests arrive through exactly one proxy (Vite), which appends the real
+    # client IP. Trust only that last entry. This is only safe while Django
+    # listens on 127.0.0.1, so nobody can reach it without going through Vite.
+    'NUM_PROXIES': 1,
 }
 
 MEDIA_URL = '/media/'

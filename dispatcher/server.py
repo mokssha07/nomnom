@@ -19,6 +19,11 @@ from dispatcher.protocol import (
 log = logging.getLogger("dispatcher")
 
 HOST = "0.0.0.0"
+# Only Django publishes, and it runs on this machine. The ingest port has no
+# authentication, so it listens on loopback only: nobody on the Wi-Fi can inject
+# fake orders. The broadcast port stays on HOST so kitchen displays can listen.
+# ponytail: if Django ever runs on another machine, this needs a shared secret.
+INGEST_HOST = "127.0.0.1"
 INGEST_PORT = 9000
 BROADCAST_PORT = 9001
 SOCKET_TIMEOUT = 5  # seconds; a subscriber that can't accept data this long is dropped
@@ -39,8 +44,8 @@ class Dispatcher:
     # ---------- lifecycle ----------
 
     def start(self):
-        ingest = self._listen(self.ingest_port)
-        broadcast = self._listen(self.broadcast_port)
+        ingest = self._listen(INGEST_HOST, self.ingest_port)
+        broadcast = self._listen(self.host, self.broadcast_port)
         # If port 0 was requested, record the port the OS actually gave us.
         self.ingest_port = ingest.getsockname()[1]
         self.broadcast_port = broadcast.getsockname()[1]
@@ -48,7 +53,7 @@ class Dispatcher:
         self._spawn(self._accept_loop, ingest, self._handle_publisher)
         self._spawn(self._accept_loop, broadcast, self._handle_subscriber)
         log.info("ingest on %s:%d, broadcast on %s:%d",
-                 self.host, self.ingest_port, self.host, self.broadcast_port)
+                 INGEST_HOST, self.ingest_port, self.host, self.broadcast_port)
 
     def stop(self):
         self._stop.set()
@@ -68,10 +73,10 @@ class Dispatcher:
 
     # ---------- internals ----------
 
-    def _listen(self, port):
+    def _listen(self, host, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.bind((self.host, port))
+        s.bind((host, port))
         s.listen()
         return s
 

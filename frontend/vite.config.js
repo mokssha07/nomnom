@@ -13,6 +13,11 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        // Append the real client IP to X-Forwarded-For. Django's login rate
+        // limit trusts only this last entry (NUM_PROXIES = 1), so a client
+        // can't dodge it with a fake header, and one person's bad guesses
+        // don't lock out everyone else who comes through this proxy.
+        xfwd: true,
       },
       '/ws': {
         target: 'ws://localhost:8000',
