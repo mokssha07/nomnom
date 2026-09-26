@@ -1,5 +1,5 @@
 /**
- * The real HTTP client. Not used until USE_MOCK in index.js is flipped to false.
+ * The HTTP client for the Django backend.
  *
  * Two jobs, and they are worth naming separately:
  *
@@ -20,8 +20,8 @@ import { canCancel } from './shapes.js';
 const BASE = '/api';
 
 /* Where the credential lives between reloads.
-   sessionStorage rather than localStorage: it dies with the tab, which matches
-   how the mock behaves and stops a shared lab machine staying signed in.
+   sessionStorage rather than localStorage: it dies with the tab, which stops a
+   shared lab machine staying signed in.
 
    Worth saying out loud rather than hiding: any token the page's own JavaScript
    can read, injected JavaScript can read too. An HttpOnly cookie is the one

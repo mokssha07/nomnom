@@ -148,8 +148,8 @@ cd frontend && npm test                     # frontend unit tests
 - **Server decides the price.** The total is always calculated by the backend.
 - **The dispatcher can't break ordering.** Events are sent after the database commit,
   and if the dispatcher is down they're dropped with a warning.
-- **Swappable API client.** Pages only import `frontend/src/api/index.js`. Set
-  `USE_MOCK = true` there to run the frontend without a backend.
+- **One API boundary.** Pages only import `frontend/src/api/`; `real.js` is the one
+  place Django's field names are translated into the shapes the pages use.
 
 ## Known limits (deliberate for a campus LAN project)
 

@@ -6,9 +6,8 @@
  *   3. nothing                  (the layout copes; see PLACEHOLDER)
  *
  * The lookup is BY NAME, not by id. Ids belong to whichever database is
- * answering — the mock numbers Masala Dosa 1, and there is no reason Django
- * agrees — so keying photos by id meant every picture moved the day we
- * pointed at the real backend. Names are what both systems actually share.
+ * answering, so keying photos by id would move every picture whenever the
+ * menu is re-imported. Names are stable.
  *
  * Files stay named `<id>-<slug>.webp`; the id prefix is just how they sort in
  * the folder and is skipped when reading them. `eager: true` resolves them at

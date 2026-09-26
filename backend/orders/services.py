@@ -4,7 +4,6 @@ from django.utils import timezone
 from .events import order_created_event, order_status_event, publish_event
 from .models import Order, OrderItem, OrderStatusLog
 from menu.models import MenuItem
-from django.db import transaction as db_transaction
 from notifications.emails import (
     STUDENT_EMAIL_STATUSES, send_low_stock_alert_async, send_order_confirmation_async,
     send_order_status_async,
@@ -12,9 +11,8 @@ from notifications.emails import (
 
 
 class InsufficientStockError(Exception):
-    def __init__(self, item_id, item_name, message):
+    def __init__(self, item_id, message):
         self.item_id = item_id
-        self.item_name = item_name
         self.message = message
         super().__init__(message)
 
@@ -74,7 +72,7 @@ def place_order(user, counter, items, idempotency_key):
             menu_item = MenuItem.objects.select_for_update().get(id=item["menu_item_id"])
         except MenuItem.DoesNotExist:
             raise InsufficientStockError(
-                item["menu_item_id"], None,
+                item["menu_item_id"],
                 f"Menu item with id {item['menu_item_id']} does not exist."
             )
 
@@ -84,7 +82,7 @@ def place_order(user, counter, items, idempotency_key):
             )
         if not menu_item.is_available:
             raise InsufficientStockError(
-                menu_item.id, menu_item.name, f"'{menu_item.name}' is not available right now."
+                menu_item.id, f"'{menu_item.name}' is not available right now."
             )
 
         quantity = item["quantity"]
@@ -92,7 +90,7 @@ def place_order(user, counter, items, idempotency_key):
         if menu_item.stock_quantity is not None:
             if menu_item.stock_quantity < quantity:
                 raise InsufficientStockError(
-                    menu_item.id, menu_item.name,
+                    menu_item.id,
                     f"Only {menu_item.stock_quantity} unit(s) of '{menu_item.name}' left."
                 )
             menu_item.stock_quantity -= quantity

@@ -10,3 +10,6 @@ ftp_data/
 
 # Daily sales backups contain student usernames: keep them out of git.
 backend/backups/
+
+# Editor/tool state
+.serena/

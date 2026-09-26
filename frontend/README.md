@@ -15,10 +15,9 @@ npm run dev
 
 Open http://localhost:5173.
 
-The app ships with a fake backend switched on, so it runs with nothing else
-installed. Demo sign-ins: `student/student`, `kitchen/kitchen`,
-`manager/manager`. The demo student holds roll number `21CS001`, so registering
-with that number shows the inline duplicate-field error.
+It needs the Django backend on `localhost:8000` (see the root README). The dev
+server proxies `/api` and `/ws` to it (`vite.config.js`), so the browser only
+ever talks to one origin and there is no CORS setup to do.
 
 ## Build it
 
@@ -27,23 +26,10 @@ npm run build     # output lands in dist/
 npm run preview   # serve the built output at http://localhost:4173
 ```
 
-## Switching to the real backend
-
-One line, in `src/api/index.js`:
-
-```js
-const USE_MOCK = true;   // ← false
-```
-
-`mock.js` and `real.js` export the same functions with the same signatures, so
-no page changes. In dev, `real.js` calls `/api/...` and the Vite dev server
-proxies that to `http://localhost:8000` (see `vite.config.js`) — the browser
-only ever talks to one origin, so there is no CORS setup to do.
-
 ## What the backend has to provide
 
 Shapes and every call are documented in **`src/api/shapes.js`** — that file is
-the contract, and both clients are written against it. Summary:
+the contract, and `real.js` is written against it. Summary:
 
 | Call | Method + path | Returns |
 | --- | --- | --- |
@@ -98,70 +84,8 @@ Django field name. What the translation absorbs:
 - **`is_orderable` beats `is_available`** when both are present — a dish that
   is on the menu but out of stock is not orderable.
 
-### Notes for whoever builds the API
-
-- `order.items` stores the **name and price as they were when the order was
-  placed**. Changing a menu price must not change what an old order says.
-- `order.id` is a small integer. It is shown to students and called out at the
-  counter as a token number (`#042`), so it needs to stay short.
-- The server computes the total; the client never sends one.
-- **`placeOrder` sends an `idempotency_key`.** It is minted when the cart is
-  created and reused unchanged on every retry of the same basket. If a request
-  quietly succeeds and the reply is lost — flaky campus wifi, exactly the
-  demo conditions — the retry must return the **original order** rather than
-  cook everything twice. The key lives in the cart context, not the Cart page,
-  so navigating back to the menu does not reset it.
-- **The out-of-stock `400` names the dish.** The cart tints that one row and
-  leaves the rest of the basket alone; without an id the student has to rebuild
-  five lines because the samosas went. `httpError` reads `item_id` — and only
-  `item_id`, since the status code is an ordinary 400 shared with validation
-  errors.
-- `setStatus` only ever moves an order **one step forward**. Anything else
-  should be a `409` — it stops a double-tap on the kitchen display from
-  skipping a state.
-- `cancelOrder` is a `DELETE`, and a `204` is fine: the client re-reads the
-  order when the response has no body. It is refused for anything past
-  `ACCEPTED`, and the client checks first so the button disappears rather than
-  failing on tap.
-- Auth is **token auth**. `login` and `register` must return the user *and* a
-  token — `{ token, role, user_id }`, or dj-rest-auth's `{ key, user }`;
-  `real.js` reads either, and rebuilds the username from what was typed when
-  the response omits it. Every later request carries
-  `Authorization: Token <token>`, including GETs. No cookies and no CSRF
-  header. Moving to JWT means changing the word `Token` to `Bearer` in
-  `authHeaders` in `src/api/real.js`, and nothing else.
-
-### Answered by the backend team
-
-These were the six ambiguities in the spec. All six were checked against the
-Django source and answered, so the guessing branches are gone:
-
-1. **`menu_item` on an order line is a plain dish name.** The serializer
-   declares it `CharField(source='menu_item.name', read_only=True)`, so the id
-   is not on the line at all. `toOrderItem` reads the string directly.
-2. **Nothing is paginated.** No `DEFAULT_PAGINATION_CLASS`, no per-view
-   `pagination_class`; every list is a bare JSON array. `unwrap` is kept as a
-   one-line safety net for the day someone adds a `page_size` setting.
-3. **Out of stock is `400`, not `409`,** with
-   `{ error: 'insufficient_stock', detail, item_id }`. The failing item's id is
-   under `item_id`. Nothing in the app keys off the status code for this —
-   `item_id` being present is the whole signal — because a 400 is also what a
-   plain validation failure returns.
-4. **`counter_id` going in, `counter` coming back.** The create view reads
-   `request.data.get("counter_id")` (an int); every response carries a nested
-   `{ id, name }` under `counter`. This asymmetry is the one place a plausible
-   guess fails silently: posting `counter` still returns `201`, and the order is
-   filed against no counter. Pinned by a test in `real.test.js`.
-5. **`image` is absolute** — DRF builds it with `request.build_absolute_uri()`,
-   so it arrives as `http://host:8000/media/...`. Note for deployment: that host
-   comes from the request's `Host` header, so a reverse proxy needs
-   `USE_X_FORWARDED_HOST` set or the photos will point at the wrong machine.
-6. **`roll_number` optional and unique is fine**, because Postgres treats
-   multiple `NULL`s as distinct, and `RegisterView` skips the duplicate check
-   when the value is empty. The backend team flagged that the register form only
-   collected username and password, leaving every roll number `NULL` — that is
-   already fixed here: the form collects roll number, email and phone, and marks
-   whichever field the server names.
+Server-side rules (idempotency keys, stock errors, status transitions, auth) are
+documented in [`docs/API.md`](../docs/API.md).
 
 ### The ACCEPTED fold
 
@@ -193,7 +117,7 @@ deciding anything, because bouncing to `/login` while the answer is still in
 flight would sign a signed-in user out on every refresh. A student who opens
 `/kitchen` is sent to `/menu` rather than shown an error: it is a typo, not an
 attack. **The guard is convenience, not security** — the server is what refuses
-a student's `setStatus` (403, in both `mock.js` and `real.js`), because a check
+a student's `setStatus` (403), because a check
 that only runs in the browser is one anybody can lift with devtools.
 
 ## Layout
@@ -201,9 +125,8 @@ that only runs in the browser is one anybody can lift with devtools.
 ```
 src/
   api/
-    index.js      the switch — USE_MOCK, and the only module pages import
+    index.js      the only module pages import (re-exports real.js)
     shapes.js     the contract: shapes, statuses, status transitions
-    mock.js       in-memory fake backend
     real.js       HTTP client for Django
   styles/
     tokens.css    the whole design system: colour, type, space, shape
@@ -296,11 +219,9 @@ different machine.
 
 ## Offline by design
 
-The mock backend makes no network requests, and the font is bundled with the
-app (`@fontsource-variable/inter`) rather than loaded from Google. Dish photos
-are local WebP files, looked up **by dish name** rather than by id — ids belong
-to whichever database is answering, and keying photos by id meant every picture
-moved the day the app pointed at the real backend. A photo the backend sends
+The font is bundled with the app (`@fontsource-variable/inter`) rather than
+loaded from Google. Dish photos are local WebP files, looked up **by dish name**
+rather than by id, because ids change whenever the menu is re-imported. A photo the backend sends
 (`item.image`) wins over the local file; a dish with neither gets a grey tile.
 To confirm the built app talks to nothing outside itself:
 `npm run build`, then `grep -r "https\?://" dist/assets/`.
@@ -310,12 +231,8 @@ To confirm the built app talks to nothing outside itself:
 - `npm run photos` re-compresses the full-size dish photos in `src/assets/raw`
   into the 680px WebP files the app ships. Only the compressed ones are
   committed; 12 MB of originals became 1.1 MB.
-- `?flaky` on any URL (e.g. http://localhost:5173/kitchen?flaky) makes the mock
-  fail about half of all refreshes. There is no network to unplug with an
-  in-memory backend, so this is how the "connection lost" banner and the
-  keep-the-last-data behaviour are demonstrated.
 - `npm test` runs the unit tests (`node --test`, no framework, no dependencies).
-  56 of them, covering the money maths, the arc geometry, the late-order clock,
+  54 of them, covering the money maths, the arc geometry, the late-order clock,
   the kitchen's column folding, and every translation `real.js` performs on a
   Django response — which is where a wrong assumption about the backend would
   otherwise surface as a wrong number on a bill.

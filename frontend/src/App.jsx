@@ -87,7 +87,7 @@ export default function App() {
  *                   /kitchen has made a typo, not an attack
  *
  * This is convenience, not security. The board is safe because the server
- * refuses setStatus for a student (403 in both mock.js and real.js); a guard
+ * refuses setStatus for a student (403); a guard
  * that only lives in the browser is a guard anyone can open devtools and lift.
  */
 function Require({ role, children }) {

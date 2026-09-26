@@ -6,17 +6,10 @@ order placement. The event is simply dropped and a warning is logged.
 """
 import logging
 import socket
-import sys
-from pathlib import Path
 
 from django.conf import settings
 
-# The dispatcher package lives next to backend/, so add the project root to sys.path.
-_PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
-
-from dispatcher.protocol import encode_message  # noqa: E402
+from dispatcher.protocol import encode_message   # importable via settings.py
 
 log = logging.getLogger(__name__)
 

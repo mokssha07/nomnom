@@ -2,8 +2,8 @@
  * THE API CONTRACT — single source of truth.
  *
  * Every shape the frontend depends on lives here. When the real backend
- * disagrees, change it here first, then fix the two files that produce these
- * shapes: mock.js and real.js. No page should ever invent a field.
+ * disagrees, change it here first, then fix real.js, which produces these
+ * shapes. No page should ever invent a field.
  *
  * These are the shapes the PAGES see. The Django backend sends something
  * different (category objects, is_orderable, string prices, total_amount,
@@ -149,8 +149,6 @@ export function canCancel(status) {
 export function isFinished(status) {
   return status === 'COMPLETED' || status === 'CANCELLED';
 }
-
-export const ROLES = ['student', 'staff', 'manager'];
 
 /** Where each role lands after signing in. */
 export const HOME_FOR_ROLE = {

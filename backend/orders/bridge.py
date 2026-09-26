@@ -12,18 +12,11 @@ dispatcher goes away, so WebSocket clients never notice a dispatcher restart.
 import asyncio
 import json
 import logging
-import sys
-from pathlib import Path
 
 from channels.layers import get_channel_layer
 from django.conf import settings
 
-# The dispatcher package lives next to backend/, so add the project root to sys.path.
-_PROJECT_ROOT = Path(__file__).resolve().parents[2]
-if str(_PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(_PROJECT_ROOT))
-
-from dispatcher.protocol import HEADER, MAX_MESSAGE_SIZE, ProtocolError  # noqa: E402
+from dispatcher.protocol import HEADER, MAX_MESSAGE_SIZE, ProtocolError   # importable via settings.py
 
 log = logging.getLogger(__name__)
 
