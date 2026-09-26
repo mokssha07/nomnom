@@ -169,7 +169,7 @@ test('placeOrder sends counter_id, not counter', () => {
       assert.equal(sent.counter_id, 3);
       assert.equal(sent.counter, undefined);
       assert.equal(sent.idempotency_key, 'k1');
-      assert.deepEqual(sent.items, [{ menu_item: 4, quantity: 2 }]);
+      assert.deepEqual(sent.items, [{ menu_item_id: 4, quantity: 2 }]);
     })
     .finally(() => {
       globalThis.fetch = realFetch;

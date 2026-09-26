@@ -308,7 +308,7 @@ export const placeOrder = (items, { counterId, idempotencyKey } = {}) =>
       // write key and the read key are genuinely different names.
       counter_id: counterId,
       idempotency_key: idempotencyKey,
-      items: items.map(({ id, qty }) => ({ menu_item: id, quantity: qty })),
+      items: items.map(({ id, qty }) => ({ menu_item_id: id, quantity: qty })),
     },
   }).then(toOrder);
 
