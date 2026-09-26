@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { HOME_FOR_ROLE } from './api/shapes';
 import { AuthProvider, useAuth } from './auth';
 import { CartProvider } from './cart';
+import OrderAlerts from './components/OrderAlerts';
 import Cart from './pages/Cart';
 import KitchenDisplay from './pages/KitchenDisplay';
 import Menu from './pages/Menu';
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
+        <OrderAlerts />
         <Routes>
           <Route path="/login" element={<SignIn mode="login" />} />
           <Route path="/register" element={<SignIn mode="register" />} />

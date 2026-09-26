@@ -3,11 +3,23 @@ from django.conf import settings
 from .async_email import send_async
 
 
+# Which status changes email the student. PLACED gets its own confirmation;
+# ACCEPTED/PREPARING happen seconds apart and would just be inbox noise.
+STUDENT_EMAIL_STATUSES = {"READY"}   # add "CANCELLED" to email cancellations too
+
+STATUS_MESSAGES = {
+    "READY": ("is ready!", "Please collect it at {counter} and pay at the counter."),
+    "CANCELLED": ("was cancelled", "Nothing to pay. You can place a new order any time."),
+}
+
+
 def send_order_confirmation(order):
     """
     Called after an order is successfully placed. Sent through send_async so a
     slow or broken mail server can never delay or fail the checkout request.
     """
+    if not order.student.email:
+        return   # email is optional at sign-up; the app itself still shows the status
     subject = f"Order Confirmed - {order.order_number}"
 
     lines = [f"Hi {order.student.username},", "", f"Your order {order.order_number} has been placed.", ""]
@@ -32,6 +44,30 @@ def send_order_confirmation_async(order):
     send_async(send_order_confirmation, order)
 
 
+def send_order_status(order):
+    if not order.student.email or order.status not in STATUS_MESSAGES:
+        return
+    headline, advice = STATUS_MESSAGES[order.status]
+    send_mail(
+        f"Order {order.order_number} {headline}",
+        "\n".join([
+            f"Hi {order.student.username},",
+            "",
+            f"Your order {order.order_number} {headline}",
+            advice.format(counter=order.counter.name),
+            "",
+            f"Total: Rs {order.total_amount}",
+        ]),
+        settings.DEFAULT_FROM_EMAIL,
+        [order.student.email],
+        fail_silently=False,
+    )
+
+
+def send_order_status_async(order):
+    send_async(send_order_status, order)
+
+
 
 def send_low_stock_alert(menu_item):
     subject = f"Low Stock Alert - {menu_item.name}"
@@ -45,7 +81,7 @@ def send_low_stock_alert(menu_item):
         subject,
         message,
         settings.DEFAULT_FROM_EMAIL,
-        [settings.DEFAULT_FROM_EMAIL],  # sent to the manager; update this once you have a real manager email
+        [settings.MANAGER_EMAIL],
         fail_silently=False,
     )
 
@@ -69,7 +105,7 @@ def send_daily_report(day, order_count, line_count, revenue, csv_path):
         subject,
         body,
         settings.DEFAULT_FROM_EMAIL,
-        [settings.DEFAULT_FROM_EMAIL],  # manager's address; update once you have a real one
+        [settings.MANAGER_EMAIL],
     )
     email.attach_file(str(csv_path))
     email.send(fail_silently=False)

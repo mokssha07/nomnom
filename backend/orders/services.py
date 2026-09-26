@@ -5,7 +5,10 @@ from .events import order_created_event, order_status_event, publish_event
 from .models import Order, OrderItem, OrderStatusLog
 from menu.models import MenuItem
 from django.db import transaction as db_transaction
-from notifications.emails import send_order_confirmation_async, send_low_stock_alert_async
+from notifications.emails import (
+    STUDENT_EMAIL_STATUSES, send_low_stock_alert_async, send_order_confirmation_async,
+    send_order_status_async,
+)
 
 
 class InsufficientStockError(Exception):
@@ -18,6 +21,10 @@ class InsufficientStockError(Exception):
 
 class InvalidTransitionError(Exception):
     pass
+
+
+class InvalidOrderError(Exception):
+    """The request is well-formed but can't be turned into an order."""
 
 
 ALLOWED_TRANSITIONS = {
@@ -42,7 +49,13 @@ def place_order(user, counter, items, idempotency_key):
     """
     existing = Order.objects.filter(idempotency_key=idempotency_key).first()
     if existing:
+        if existing.student_id != user.id:
+            # Never hand one student's order back to another.
+            raise InvalidOrderError("This idempotency_key has already been used.")
         return existing
+
+    if not counter.is_active:
+        raise InvalidOrderError(f"'{counter.name}' is not taking orders right now.")
 
     order = Order.objects.create(
         order_number="TEMP",
@@ -63,6 +76,15 @@ def place_order(user, counter, items, idempotency_key):
             raise InsufficientStockError(
                 item["menu_item_id"], None,
                 f"Menu item with id {item['menu_item_id']} does not exist."
+            )
+
+        if menu_item.counter_id != counter.id:
+            raise InvalidOrderError(
+                f"'{menu_item.name}' is not sold at '{counter.name}'. One order = one counter."
+            )
+        if not menu_item.is_available:
+            raise InsufficientStockError(
+                menu_item.id, menu_item.name, f"'{menu_item.name}' is not available right now."
             )
 
         quantity = item["quantity"]
@@ -132,6 +154,8 @@ def update_order_status(order_id, new_status, changed_by):
 
     event = order_status_event(order, previous_status)
     transaction.on_commit(lambda: publish_event(event))
+    if new_status in STUDENT_EMAIL_STATUSES:
+        transaction.on_commit(lambda: send_order_status_async(order))
 
     return order
 

@@ -10,6 +10,7 @@ User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
+    throttle_scope = 'auth'
 
     def create(self, request, *args, **kwargs):
         roll_number = request.data.get('roll_number')
@@ -18,10 +19,18 @@ class RegisterView(generics.CreateAPIView):
                 {"error": "roll_number_taken", "detail": "This roll number is already registered."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return super().create(request, *args, **kwargs)
+        response = super().create(request, *args, **kwargs)
+        # Hand back a token straight away. Making the client log in next costs a
+        # second password hash (~0.8s each at Django's default strength).
+        user = User.objects.get(username=response.data['username'])
+        token, _ = Token.objects.get_or_create(user=user)
+        response.data.update({"token": token.key, "role": user.role, "user_id": user.id})
+        return response
 
 
 class LoginView(APIView):
+    throttle_scope = 'auth'
+
     def post(self, request):
         user = authenticate(username=request.data.get('username'), password=request.data.get('password'))
         if not user:

@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useAuth } from './auth';
 import { setQty as nextLines } from './lib/cartLines';
 
 /**
@@ -17,8 +18,27 @@ const CartContext = createContext(null);
 const newOrderKey = () =>
   globalThis.crypto?.randomUUID?.() ?? `k-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
+/* Kept in sessionStorage so a refresh doesn't empty the basket. Per tab, like
+   the sign-in token, so it dies with the tab too. Anything that doesn't look
+   like our own saved cart is ignored rather than trusted. */
+const STORE_KEY = 'canteen.cart';
+
+function readSaved() {
+  try {
+    const saved = JSON.parse(globalThis.sessionStorage?.getItem(STORE_KEY) ?? 'null');
+    const valid =
+      Array.isArray(saved?.lines) &&
+      saved.lines.every((l) => Number.isInteger(l?.id) && Number.isInteger(l?.qty) && l.qty > 0) &&
+      typeof saved.orderKey === 'string';
+    return valid ? saved : null;
+  } catch {
+    return null;
+  }
+}
+
 export function CartProvider({ children }) {
-  const [lines, setLines] = useState([]);
+  const { user, isLoading } = useAuth();
+  const [lines, setLines] = useState(() => readSaved()?.lines ?? []);
 
   /**
    * One key per basket, minted when the cart is created and kept until the
@@ -28,7 +48,24 @@ export function CartProvider({ children }) {
    * Living here rather than in the Cart page matters: the page unmounts if you
    * wander back to the menu, and a key that resets is no key at all.
    */
-  const [orderKey, setOrderKey] = useState(newOrderKey);
+  const [orderKey, setOrderKey] = useState(() => readSaved()?.orderKey ?? newOrderKey());
+
+  useEffect(() => {
+    try {
+      globalThis.sessionStorage?.setItem(STORE_KEY, JSON.stringify({ lines, orderKey }));
+    } catch {
+      // storage full or blocked: the cart still works, it just won't survive a refresh
+    }
+  }, [lines, orderKey]);
+
+  // Signing out empties the basket, so the next person on a shared lab
+  // machine doesn't inherit it. Waits for isLoading so a refresh doesn't wipe it.
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLines([]);
+      setOrderKey(newOrderKey());
+    }
+  }, [isLoading, user]);
 
   const value = useMemo(
     () => ({

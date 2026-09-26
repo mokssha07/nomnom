@@ -22,13 +22,18 @@ AUTH_USER_MODEL = 'accounts.User'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-4*kc##&+@5&dyp3wl0flpzcsl6fj_0+qr^%y97qbl_18#fj%vt')
+# Everything below comes from backend/.env (copy .env.example to start).
+# DEBUG is off unless .env turns it on, so a forgotten setting fails safe.
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise RuntimeError('SECRET_KEY must be set in backend/.env when DEBUG is off.')
+    SECRET_KEY = 'django-insecure-dev-only-key'
 
-ALLOWED_HOSTS = []
+# Comma-separated. Add this machine's LAN IP so phones and kitchen screens can connect.
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -131,14 +136,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+# The Vite dev server proxies /api, so the browser needs no CORS in dev.
+# Only matters if the frontend is served from a different origin.
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:5173').split(',')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # Login/register only (views set throttle_scope = 'auth'): slows password guessing.
+    # ponytail: counts live in the local-memory cache, so per process. Fine for one server.
+    'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.ScopedRateThrottle'],
+    'DEFAULT_THROTTLE_RATES': {'auth': '10/min'},
 }
 
 MEDIA_URL = '/media/'
@@ -166,10 +175,21 @@ LOGGING = {
         'orders': {'handlers': ['console'], 'level': 'INFO'},
     },
 }
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-DEFAULT_FROM_EMAIL = 'canteen@example.com'
+# --- Email ---
+# Set EMAIL_HOST in backend/.env to send real mail (Gmail: see .env.example).
+# Without it, emails are printed in the runserver terminal instead, so nothing
+# breaks on a laptop with no mail server.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_TIMEOUT = 10   # seconds; a hung mail server must not hold a worker thread forever
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+# Gmail only sends "From" the account you log in with, so default to that.
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER or 'canteen@localhost'
+# Who gets low-stock alerts and the daily sales report.
+MANAGER_EMAIL = os.environ.get('MANAGER_EMAIL', DEFAULT_FROM_EMAIL)

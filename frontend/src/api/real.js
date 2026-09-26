@@ -246,8 +246,9 @@ export const login = async (username, password) =>
  * details: { username, password, roll_number, email, phone_number }
  */
 export async function register(details) {
-  await request('/auth/register/', { method: 'POST', body: details });
-  return login(details.username, details.password);
+  // The response carries a token, so no second request (and no second
+  // password hash on the server) just to sign in.
+  return adopt(await request('/auth/register/', { method: 'POST', body: details }), details.username);
 }
 
 /**
@@ -317,10 +318,11 @@ export const placeOrder = (items, { counterId, idempotencyKey } = {}) =>
  *
  * Staff get the board, which needs an explicit filter — without it a busy
  * lunch service would ship every completed order of the day to a screen that
- * only ever draws three columns.
+ * only ever draws three columns. READY must be in it: that is the board's
+ * third column, and the only place a cook can mark an order collected.
  */
 export async function getOrders() {
-  const query = user && user.role !== 'student' ? '?status=PLACED,ACCEPTED,PREPARING' : '';
+  const query = user && user.role !== 'student' ? '?status=PLACED,ACCEPTED,PREPARING,READY' : '';
   return unwrap(await request(`/orders/${query}`)).map(toOrder);
 }
 
@@ -345,4 +347,43 @@ export async function cancelOrder(id) {
   const payload = await request(`/orders/${id}/`, { method: 'DELETE' });
   // A 204 means it worked but says nothing; re-read so the page gets an order.
   return payload ? toOrder(payload) : getOrder(id);
+}
+
+// ── live kitchen feed ─────────────────────────────────────────────────────
+
+/**
+ * Calls onEvent for every order event the server pushes. Returns a function
+ * that closes the socket. Reconnects every few seconds if the connection
+ * drops, so a backend restart doesn't leave the board deaf.
+ *
+ * Browsers can't put headers on a WebSocket, so the token rides in the URL.
+ */
+export function subscribeKitchen(onEvent) {
+  let socket;
+  let retry;
+  let closed = false;
+
+  function open() {
+    if (closed || !token) return;
+    const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+    socket = new WebSocket(`${scheme}://${location.host}/ws/kitchen/?token=${encodeURIComponent(token)}`);
+    socket.onmessage = (message) => {
+      try {
+        const event = JSON.parse(message.data);
+        if (event.type !== 'hello') onEvent(event);
+      } catch {
+        // not JSON: ignore it, the poll still keeps the board right
+      }
+    };
+    socket.onclose = () => {
+      if (!closed) retry = setTimeout(open, 3000);
+    };
+  }
+
+  open();
+  return () => {
+    closed = true;
+    clearTimeout(retry);
+    socket?.close();
+  };
 }

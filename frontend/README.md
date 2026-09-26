@@ -53,7 +53,7 @@ the contract, and both clients are written against it. Summary:
 | `logout()` | `POST /api/auth/logout/` | — |
 | `getMenu()` | `GET /api/menu/items/` | `menuItem[]` |
 | `placeOrder(items, opts)` | `POST /api/orders/` | the created `order` |
-| `getOrders()` | `GET /api/orders/` | student: own orders, newest first<br>staff/manager: `?status=PLACED,ACCEPTED,PREPARING` |
+| `getOrders()` | `GET /api/orders/` | student: own orders, newest first<br>staff/manager: `?status=PLACED,ACCEPTED,PREPARING,READY` |
 | `getOrder(id)` | `GET /api/orders/{id}/` | `order` |
 | `setStatus(id, status)` | `PATCH /api/orders/{id}/status/` | the updated `order` |
 | `cancelOrder(id)` | `DELETE /api/orders/{id}/` | the cancelled `order` |

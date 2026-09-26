@@ -12,20 +12,36 @@ project, not an oversight.
 
 ## SMTP / Email (Stage 4)
 
-Development and testing use MailPit, a local fake SMTP server, so no real emails
-are ever sent while building or testing this project. Automated tests use
-Django's in-memory email backend instead (emails are captured in `mail.outbox`,
-never sent anywhere at all).
+Who gets what:
 
-To switch to a real SMTP provider for production, update these settings values
-(currently pointing at MailPit):
-EMAIL_HOST = 'localhost' -> your real SMTP host (e.g. smtp.gmail.com)
-EMAIL_PORT = 1025 -> your provider's port (e.g. 587)
-EMAIL_USE_TLS = False -> True, for most real providers
-EMAIL_HOST_USER = '' -> your SMTP username
-EMAIL_HOST_PASSWORD = '' -> your SMTP password / app password
+| Email | To | When |
+|---|---|---|
+| Order confirmed | the student's sign-up email | order placed |
+| Order is ready | the student's sign-up email | kitchen marks it READY |
+| Low stock alert | `MANAGER_EMAIL` | an item drops to its threshold |
+| Daily sales report | `MANAGER_EMAIL` | `python manage.py send_daily_report` |
 
-All email-sending code goes through `notifications/async_email.py`'s thread pool,
-so a real SMTP provider being slow or temporarily down will never delay or break
-order placement -- the same protection proven in Step 4.6's failure test applies
-identically to a production SMTP swap.
+Students who left email blank simply get no mail. Which statuses email the student
+is the `STUDENT_EMAIL_STATUSES` set in `notifications/emails.py`.
+
+Everything is configured in `backend/.env` (see `.env.example`):
+
+- **`EMAIL_HOST` empty (default):** emails are printed in the Django terminal. Nothing
+  is sent, nothing errors.
+- **Gmail:** `EMAIL_HOST=smtp.gmail.com`, port 587, TLS, your Gmail address as
+  `EMAIL_HOST_USER`, and a Google **App Password** (not your normal password) as
+  `EMAIL_HOST_PASSWORD`. Needs 2-Step Verification on that Google account.
+- **MailPit / any local test server:** `EMAIL_HOST=localhost`, `EMAIL_PORT=1025`,
+  `EMAIL_USE_TLS=False`.
+
+All sending goes through `notifications/async_email.py`'s thread pool, after the
+database commit. A slow, down or misconfigured mail server never delays or breaks
+an order: the failure is logged as one `email not sent (...)` line and the order
+carries on. Automated tests use Django's in-memory backend (`mail.outbox`).
+
+**Without email at all**, students still see every status change live on their order
+page, and get a browser notification when an order is ready or cancelled (cancellations
+are not emailed; they're
+asked for permission when they place an order). That works while any canteen tab is
+open, and needs HTTPS or localhost: browsers block notifications on plain
+`http://192.168.x.x`.

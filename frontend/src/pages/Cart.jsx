@@ -32,6 +32,9 @@ export default function Cart() {
   }, []);
 
   async function placeOrder() {
+    // Browsers only let a page ask for notifications from a click, and this is
+    // the click where "tell me when it's ready" makes sense.
+    if (globalThis.Notification?.permission === 'default') Notification.requestPermission();
     setIsSending(true);
     setError(null);
     setBlockedId(null);

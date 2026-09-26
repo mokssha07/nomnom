@@ -319,3 +319,8 @@ function publicUser({ id, username, role }) {
 function strip({ id, status, total, created_at, counter, items }) {
   return { id, status, total, created_at, counter, items };
 }
+
+/** The mock has no server to push from; the board's poll covers it. */
+export function subscribeKitchen() {
+  return () => {};
+}

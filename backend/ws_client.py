@@ -1,8 +1,9 @@
 """
 WebSocket test client: acts like a browser kitchen display.
 
-  python ws_client.py                                 # ws://127.0.0.1:8000/ws/kitchen/
-  python ws_client.py ws://192.168.1.33:8000/ws/kitchen/
+The feed needs a staff/manager token (from POST /api/auth/login/):
+
+  python ws_client.py "ws://127.0.0.1:8000/ws/kitchen/?token=<token>"
 """
 import asyncio
 import sys

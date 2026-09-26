@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
-import { BOARD_COLUMNS, columnFor, nextStatus, STATUS_LABELS } from '../api/shapes';
+import { BOARD_COLUMNS, columnFor, nextStatus, onBoard, STATUS_LABELS } from '../api/shapes';
 import { useAuth } from '../auth';
 import Icon from '../components/Icon';
 import PanList from '../components/PanList';
@@ -27,9 +27,9 @@ const POLL_MS = 4000;
 // What the button on a ticket says. The chip on the card already says where
 // the ticket is, so the button only has to say where it is going.
 const ADVANCE_LABEL = {
-  PLACED: 'Start cooking',
-  // ACCEPTED sits in the New column, so the cook sees no difference; the tap
-  // just moves it one further along than a PLACED ticket would go.
+  // PLACED and ACCEPTED share the New column, so the button is the only thing
+  // that changes on the first tap. Same label for both made that tap look dead.
+  PLACED: 'Accept',
   ACCEPTED: 'Start cooking',
   PREPARING: 'Mark ready',
   READY: 'Collected',
@@ -44,6 +44,13 @@ export default function KitchenDisplay() {
   const { data: orders, error, isLoading, patch } = usePoll(api.getOrders, POLL_MS);
   const { signOut } = useAuth();
   const shift = useShiftLog(orders);
+
+  // Push beats poll: any order event refetches straight away, so a new ticket
+  // lands in under a second. The poll above stays as the safety net.
+  useEffect(
+    () => api.subscribeKitchen(() => api.getOrders().then(patch, () => {})),
+    [patch],
+  );
 
   const [tab, setTab] = useState('ALL');
 
@@ -102,7 +109,7 @@ export default function KitchenDisplay() {
     );
   }
 
-  const live = orders ?? [];
+  const live = onBoard(orders ?? []);
   const shown = live
     // By column: the New tab holds PLACED and ACCEPTED alike, because to the
     // person at the pass they are the same pile of work.

@@ -34,11 +34,22 @@ No auth required. Registers a new student.
   "username": "moksh123",
   "roll_number": "CS2026001",
   "email": "moksh@college.edu",
-  "phone_number": "9876543210"
+  "phone_number": "9876543210",
+  "token": "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b",
+  "role": "student",
+  "user_id": 1
 }
 
-(Note: password is never returned. Every registered user is automatically given the
-"student" role — there is no way to self-register as staff or manager.)
+(Note: password is never returned. The token is ready to use, so there's no need to
+call /login/ straight after registering. Every registered user is automatically given
+the "student" role — there is no way to self-register as staff or manager.)
+
+**Error response (400) — weak password** (too short, too common, all numbers, or too
+similar to the username/email):
+
+{
+  "password": ["This password is too common."]
+}
 
 **Error response (400) — roll number already used:**
 
@@ -74,6 +85,13 @@ No auth required.
 {
   "error": "invalid_credentials",
   "detail": "Username or password is incorrect."
+}
+
+**Rate limit (429):** /login/ and /register/ together allow 10 requests per minute
+from one address. After that:
+
+{
+  "detail": "Request was throttled. Expected available in 42 seconds."
 }
 
 
@@ -222,7 +240,7 @@ Auth required. Places a new order.
   "created_at": "2026-09-19T13:02:11Z"
 }
 
-**Error response (400) — not enough stock:**
+**Error response (400) — not enough stock, or the item is switched off:**
 
 {
   "error": "insufficient_stock",
@@ -230,8 +248,26 @@ Auth required. Places a new order.
   "item_id": 1
 }
 
+**Error response (400) — malformed body** (missing/blank "idempotency_key", empty
+"items", "quantity" not a whole number from 1 to 50, more than 50 lines):
+
+{
+  "error": "invalid_request",
+  "detail": "Invalid order request.",
+  "fields": { "items": [ { "quantity": ["Ensure this value is greater than or equal to 1."] } ] }
+}
+
+**Error response (400) — can't be ordered here** (item belongs to a different counter,
+counter is inactive, or the idempotency_key was already used by another student):
+
+{
+  "error": "invalid_order",
+  "detail": "'Lime Soda' is not sold at 'Main Kitchen'. One order = one counter."
+}
+
 Note: sending the same "idempotency_key" twice does NOT create a second order — it
-returns the original order again with a 201, unchanged.
+returns the original order again with a 201, unchanged. This holds even if both
+requests arrive at the same moment.
 
 
 ---
@@ -298,6 +334,30 @@ status and an extra entry appended to "status_log".
   "error": "forbidden",
   "detail": "Only staff can update status."
 }
+
+DELETE and PATCH on an order id that doesn't exist return 404 with
+{"error": "not_found", "detail": "Order not found."}.
+
+
+---
+
+## Live kitchen feed (WebSocket)
+
+### ws://<host>:8000/ws/kitchen/?token=<token>
+
+Staff/manager token only. Browsers can't set headers on a WebSocket, so the token
+goes in the query string. No token, a bad token, or a student token → the connection
+is refused (close code 4403).
+
+On connect the server sends {"type": "hello", ...}, then one message per order event:
+
+{ "type": "order_created", "order_id": 1, "order_number": "ORD-2026-0001",
+  "status": "PLACED", "counter_id": 1, "total_amount": "140.00", "items": [...] }
+
+{ "type": "order_status_changed", "order_id": 1, "order_number": "ORD-2026-0001",
+  "status": "ACCEPTED", "previous_status": "PLACED", "counter_id": 1 }
+
+Events only flow while the dispatcher (python -m dispatcher.server) is running.
 
 
 ---

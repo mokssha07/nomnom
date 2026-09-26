@@ -28,3 +28,14 @@ class OrderSerializer(serializers.ModelSerializer):
 
     def get_counter(self, obj):
         return {"id": obj.counter.id, "name": obj.counter.name}
+
+class PlaceOrderItemSerializer(serializers.Serializer):
+    menu_item_id = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=1, max_value=50)
+
+
+class PlaceOrderSerializer(serializers.Serializer):
+    """Validates the POST /api/orders/ body before it reaches place_order()."""
+    counter_id = serializers.IntegerField(min_value=1)
+    items = PlaceOrderItemSerializer(many=True, allow_empty=False, max_length=50)
+    idempotency_key = serializers.CharField(max_length=100)

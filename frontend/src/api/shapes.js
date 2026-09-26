@@ -125,6 +125,15 @@ export function columnFor(status) {
   return COLUMN_FOR[status] ?? null;
 }
 
+/**
+ * Only the orders that still have a column. A ticket tapped "Collected" is
+ * COMPLETED locally before the next refetch drops it, and drawing it with no
+ * column crashed the whole board.
+ */
+export function onBoard(orders) {
+  return orders.filter((order) => columnFor(order.status) !== null);
+}
+
 /** What one tap on a kitchen card does. null = nothing further to advance to. */
 export function nextStatus(status) {
   const i = STATUSES.indexOf(status);

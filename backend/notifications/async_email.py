@@ -30,8 +30,10 @@ def send_async(send_fn, *args, **kwargs):
     def _wrapped():
         try:
             send_fn(*args, **kwargs)
-        except Exception:
-            logger.exception("Background email send failed")
+        except Exception as exc:
+            # One line, not a traceback: a mail server being down is expected
+            # (wrong password, no internet), not a bug. The order is unaffected.
+            logger.warning("email not sent (%s: %s)", type(exc).__name__, exc)
 
     if _RUNNING_TESTS:
         _wrapped()

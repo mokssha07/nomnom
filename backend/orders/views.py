@@ -1,11 +1,17 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from counters.models import Counter
 from .models import Order
-from .serializers import OrderSerializer
-from .services import place_order, update_order_status, cancel_order, InsufficientStockError, InvalidTransitionError
+from .serializers import OrderSerializer, PlaceOrderSerializer
+from .services import (
+    place_order, update_order_status, cancel_order,
+    InsufficientStockError, InvalidOrderError, InvalidTransitionError,
+)
+
+NOT_FOUND = {"error": "not_found", "detail": "Order not found."}
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -26,17 +32,31 @@ class OrderListCreateView(generics.ListCreateAPIView):
         return Order.objects.filter(student=user)
 
     def create(self, request, *args, **kwargs):
-        counter = get_object_or_404(Counter, id=request.data.get("counter_id"))
-        items = request.data.get("items", [])
-        idempotency_key = request.data.get("idempotency_key")
+        body = PlaceOrderSerializer(data=request.data)
+        if not body.is_valid():
+            return Response(
+                {"error": "invalid_request", "detail": "Invalid order request.", "fields": body.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        data = body.validated_data
+        counter = get_object_or_404(Counter, id=data["counter_id"])
+        args = (request.user, counter, data["items"], data["idempotency_key"])
 
         try:
-            order = place_order(request.user, counter, items, idempotency_key)
+            try:
+                order = place_order(*args)
+            except IntegrityError:
+                # Two requests with the same key raced; the other one won.
+                # Running again finds its order and returns that instead.
+                order = place_order(*args)
         except InsufficientStockError as e:
             return Response(
                 {"error": "insufficient_stock", "detail": e.message, "item_id": e.item_id},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        except InvalidOrderError as e:
+            return Response({"error": "invalid_order", "detail": str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
@@ -49,12 +69,14 @@ class OrderDetailView(APIView):
         is_staff = request.user.role in ("staff", "manager")
         if not is_staff and order.student_id != request.user.id:
             # 404 rather than 403, so students can't probe which order IDs exist
-            return Response({"error": "not_found", "detail": "Order not found."}, status=404)
+            return Response(NOT_FOUND, status=404)
         return Response(OrderSerializer(order).data)
 
     def delete(self, request, pk):
         try:
             order = cancel_order(pk, request.user)
+        except Order.DoesNotExist:
+            return Response(NOT_FOUND, status=404)
         except InvalidTransitionError as e:
             return Response({"error": "cannot_cancel", "detail": str(e)}, status=400)
         except PermissionError as e:
@@ -70,6 +92,8 @@ class OrderStatusUpdateView(APIView):
             return Response({"error": "forbidden", "detail": "Only staff can update status."}, status=403)
         try:
             order = update_order_status(pk, request.data.get("status"), request.user)
+        except Order.DoesNotExist:
+            return Response(NOT_FOUND, status=404)
         except InvalidTransitionError as e:
             return Response({"error": "invalid_transition", "detail": str(e)}, status=400)
         return Response(OrderSerializer(order).data)
